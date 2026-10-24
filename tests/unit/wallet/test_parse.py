@@ -77,3 +77,22 @@ def _fail(instructions, untrusted):
 ])
 def test_llm_failure_or_garbage_gives_no_records(rules, response):
     assert parse_documents([text_doc()], "SYN-0001", FakeLLM({"extract_earnings": response}), rules=rules) == []
+
+
+def llm_one(**over):
+    item = {"platform": "uber", "period_start": "2027-02-01", "period_end": "2027-02-28", "hours": "92.5",
+            "gross_income": "1480.00", "source_quote": "Online hours 92.5\nGross fares 1,480.00 USD", "confidence": 0.9}
+    return FakeLLM({"extract_earnings": {"records": [{**item, **over}]}})
+
+
+def test_invented_quote_with_right_numbers_is_still_dropped(rules):
+    """Numbers alone aren't enough: the quote itself must be in the document."""
+    llm = llm_one(source_quote="Hours worked: 92.5, paid $1,480.00")
+    assert parse_documents([text_doc()], "SYN-0001", llm, rules=rules) == []
+
+
+def test_kept_quote_is_the_documents_own_text(rules):
+    """LLMs collapse whitespace; the stored quote must be the source characters."""
+    (r,) = parse_documents([text_doc()], "SYN-0001", llm_one(source_quote="Online hours 92.5 Gross fares 1,480.00 USD"),
+                           rules=rules)
+    assert r.source_quote == "Online hours 92.5\nGross fares 1,480.00 USD"
