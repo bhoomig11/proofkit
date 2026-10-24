@@ -77,3 +77,10 @@ def test_averaging_flag_cannot_be_turned_on_until_implemented(wallet_rules_path,
     p.write_text(json.dumps(cfg))
     with pytest.raises(ValueError, match="averaging"):
         load_wallet_rules(p)
+
+
+def test_monthly_total_and_weekly_line_in_one_doc_are_not_double_counted(rules):
+    monthly = stmt("m", "d1", date(2027, 2, 1), date(2027, 2, 28), "80")
+    weekly = stmt("w", "d1", date(2027, 2, 1), date(2027, 2, 7), "20")  # same doc lists the week and the month
+    m = evaluate_months([monthly, weekly], rules)[0]
+    assert m.total_hours == D("0.00") and m.needs_review
