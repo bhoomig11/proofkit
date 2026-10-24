@@ -184,3 +184,34 @@ def test_every_doc_checked_before_any_llm_call(rules):
     with pytest.raises(ValueError):
         parse_documents([text_doc(), bad], "SYN-0001", llm, rules=rules)
     assert llm.calls == []
+
+
+def test_filename_never_read_even_when_it_exists(rules, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "u.txt").write_text("SECRET Online hours 999")
+    llm = llm_one()
+    parse_documents([text_doc()], "SYN-0001", llm, rules=rules)
+    assert "SECRET" not in llm.calls[0]["user"]
+
+
+def test_no_wallet_code_touches_filename():
+    import ast
+    from pathlib import Path
+
+    import proofkit.wallet as wallet
+    for f in Path(wallet.__file__).parent.glob("*.py"):
+        tree = ast.parse(f.read_text())
+        assert not [n for n in ast.walk(tree) if isinstance(n, ast.Attribute) and n.attr == "filename"], f.name
+
+
+@pytest.mark.parametrize("make", [
+    lambda: EarningsDocument(doc_id="t1", member_id="SYN-0001", filename="u.txt", doc_type="text", content_text="a" * 501),
+    lambda: b64_doc(b"a" * 501, doc_type="text"),
+    lambda: b64_doc(b"a" * 501, doc_type="image"),
+    lambda: b64_doc(pdf_bytes("x" * 300)),  # valid pdf, just too big
+])
+def test_size_limit_applies_to_valid_content(rules, make):
+    doc = make()
+    small = rules.model_copy(update={"max_bytes": 500})
+    with pytest.raises(ValueError, match="larger than|bad text upload"):
+        parse_documents([doc], "SYN-0001", llm_one(), rules=small)
