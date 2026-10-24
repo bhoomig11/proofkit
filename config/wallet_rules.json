@@ -11,5 +11,5 @@
   "min_record_confidence": 0.7,
   "requirements_start_date": {"value": "2027-01-01", "verify": false},
   "known_platforms": ["doordash", "uber", "lyft", "instacart", "upwork", "taskrabbit", "fiverr", "grubhub", "amazon_flex", "rover", "w2_employer"],
-  "upload_limits": {"max_bytes": 10485760, "allowed_doc_types": ["text", "csv", "image"], "max_pdf_pages": 20, "why": "pdf off until pypdf is bumped to >= 6.21.2 (pip-audit: decompression-bomb and parser CVEs in 5.1.0); then add pdf back"}
+  "upload_limits": {"max_bytes": 10485760, "allowed_doc_types": ["text", "csv", "image", "pdf"], "max_pdf_pages": 20, "why": "pdf back on: the team bumped pypdf to 6.21.2, which pip-audit reports clean (5.1.0 had decompression-bomb and parser CVEs); parse.py also caps every decoded pdf stream at max_bytes"}
 }

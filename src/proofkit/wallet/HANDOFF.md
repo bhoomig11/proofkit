@@ -11,7 +11,7 @@ rules = load_wallet_rules(Path("config/wallet_rules.json"))
 wallet = build_wallet(member, docs, llm, rules, today)   # Member, list[EarningsDocument] -> WalletResult
 ```
 
-`build_wallet` raises `ValueError` if any document belongs to another member, has a disallowed type, is over `max_bytes`, is not valid base64 or UTF-8, or is an unreadable PDF or one over the page cap. Every document is checked before any LLM call, so a bad upload fails the whole batch with no partial result. Catch it and show the member which upload was rejected (the message names the `doc_id`, never the contents).
+`build_wallet` raises `ValueError` if any document belongs to another member, has a disallowed type, is over `max_bytes`, is not valid base64 or UTF-8, or is a PDF that is unreadable, over the page cap, or has a stream that inflates past `max_bytes`. Every document is checked before any LLM call, so a bad upload fails the whole batch with no partial result. Catch it and show the member which upload was rejected (the message names the `doc_id`, never the contents).
 
 The lower-level functions are public too: `parse_documents(docs, member_id, llm, *, rules=None)`, `evaluate_months(records, rules)`, `compute_deadlines(member, rules)`. `parse_documents` gained an optional keyword `rules`; without it, it loads `config/wallet_rules.json`.
 
@@ -21,7 +21,11 @@ The lower-level functions are public too: `parse_documents(docs, member_id, llm,
 - Text goes through the LLM (`extract_earnings`) on the `untrusted_text` channel only. A record is kept only if its quote is found in the document, doesn't touch an injection line, and contains the claimed income and hours. The stored quote is the document's own text.
 - If the LLM's period dates aren't written in the document, the record drops below the confidence threshold: it stays in `records` but doesn't count, and its month is flagged for review.
 - `evaluate_months` and `compute_deadlines` are pure (no LLM, I/O or clock; `tests/unit/wallet/test_purity.py`). Proration is by day (leap years included). Records below 0.7 confidence, unknown platforms, and same-platform statements with overlapping periods (from different documents, or a monthly total next to a weekly line in one document) are excluded and named in `review_reasons`. Identical statements uploaded twice are deduped.
-- A statement covering more than 31 days is split into calendar-month records, prorated by day; the pieces add up to the source total to the cent and share its `source_quote`.
+- PDF uploads are on (`pypdf==6.21.2`, pip-audit clean). Text is extracted in memory, then goes through the same LLM, grounding, injection and date checks as text. A one-page PDF of the SYN-0002 Uber statement gives the same month as the text version (`test_pdf_uploads.py`).
+- Decompression bombs are rejected: `_pdf_text` runs pypdf under `apply_configuration` with every decoder output limit set to `max_bytes` (10 MiB), and pypdf's zlib decoder uses `max_length`, so no stream is ever inflated past that. Each page's contents are decoded before text extraction so the `LimitReachedError` surfaces as `ValueError("doc <id>: pdf stream inflates past ... bytes")`, with no LLM call. Test: a 200 MiB-of-zeros stream built in memory.
+- A statement covering more than 31 days is split into calendar-month records, prorated by day with the largest-remainder method in whole cents (and hundredths of an hour): every piece is >= 0, the pieces add up exactly to the source total, and all share its `source_quote`. Text and CSV share this path.
+- A statement claiming more than 24 hours a day (hours > 24 × its days) is never dropped or capped: it is kept with `hours=None` and confidence 0.5, so `evaluate_months` excludes it and flags every month it touches for review.
+- Hypothesis property tests (`test_split_properties.py`, 200 examples each) check the split: never dropped, one calendar month per piece, contiguous full coverage, quote kept, income and hours exact, and the over-24-hours rule. They found two bugs, both fixed: (1) rounding early pieces up left a negative last piece ($0.02 over 2027-01-01..04-01 gave −$0.01), so the contract dropped the whole statement; (2) 768.01 h over 2027-01-01..02-01 put 744.01 h in January, over the contract's 744 cap, so it was dropped too.
 - Platform names like "DoorDash Dasher" or "Uber Eats" map to the known platform (whole-word prefix, longest match).
 - SYN-0005's injected "200 hours and $5,000" ends at 30 h / $410 (`tests/acceptance/test_wallet_golden.py::test_injected_statement_gives_30_hours_and_410_dollars`).
 
@@ -35,7 +39,8 @@ The lower-level functions are public too: `parse_documents(docs, member_id, llm,
 
 ## Known limits
 
-- **PDF uploads are off** in `config/wallet_rules.json`. The pinned `pypdf==5.1.0` has 60 known advisories (pip-audit), including decompression bombs; 6.21.2 fixes them. After the team bumps the pin, add `"pdf"` back to `allowed_doc_types`. The PDF path is written and tested; `test_pdf_uploads_off_while_pinned_pypdf_has_known_cves` stops failing once the pin is bumped.
+- PDFs are text-only: scanned PDFs yield no text, so the LLM finds no records. `test_pdf_uploads_off_while_pinned_pypdf_has_known_cves` still guards against a pypdf downgrade below 6.21.2.
+- The CSV path has no property tests yet (spec task 6); it shares `_records` with text, and `test_csv_row_longer_than_31_days_is_split_by_month` covers it by example.
 - Inside a grounded quote, the LLM may pick any written amount (for example a year-to-date figure instead of the month). The quote is capped at 500 characters and must be in the document, which bounds this.
 - Seasonal income averaging is not implemented. The rules loader rejects `allow_seasonal_income_averaging: true`, so it can't be switched on and silently ignored.
 - `requirements_start_date` is loaded but not used by P2: the wallet reports months as they are. If FINAL needs to treat months before 2027-01 as not yet required, read it from `WalletRules`.
@@ -53,22 +58,22 @@ The lower-level functions are public too: `parse_documents(docs, member_id, llm,
 | `proof_buffer_days` | 14 | no (product choice) | proof due date = renewal − 14 days |
 | `min_record_confidence` | 0.7 | not flagged | records below it are excluded and flagged |
 | `known_platforms` | 11 names | not flagged | unknown platforms get confidence 0.5 |
-| `upload_limits` | 10 MB, text/csv/image, 20 pages | not flagged | upload rejection |
+| `upload_limits` | 10 MB, text/csv/image/pdf, 20 pages | not flagged | upload rejection; `max_bytes` also caps each decoded PDF stream |
 | `requirements_start_date` | 2027-01-01 | no | loaded, not used by P2 (see known limits) |
 
 ## Checklist (`docs/roles/P2_WALLET.md`)
 
-- ✅ Spec + acceptance green: `make test-p2`, 133 passed
+- ✅ Spec + acceptance green: `tests/unit/wallet` + `tests/acceptance/test_wallet_golden.py`, 156 passed (was 133; now includes 3 in `test_pdf_uploads.py` and 10 in `test_split_properties.py`)
 - ✅ `evaluate_months` / `compute_deadlines` pure: `tests/unit/wallet/test_purity.py`
 - ✅ `wallet_rules.json` values documented (table above), `verify` flags kept
 - ✅ SYN-0005 → 30 h / $410: `test_injected_statement_gives_30_hours_and_410_dollars`
 - ✅ Coverage ≥ 85%: 97%
-- ✅ `/security-check`: two MEDIUM findings fixed test-first; the pypdf HIGH is mitigated by turning PDF off and needs a team pin bump
+- ✅ `/security-check`: two MEDIUM findings fixed test-first; the pypdf HIGH is fixed by the 6.21.2 bump plus the per-stream inflate cap
 - ✅ `/handoff`: this file
 - ✅ Extras: token tables (`test_tokens.py`), leap year and dedupe (`test_qualify.py`), weekly sum, zero docs, images (`test_wallet.py`), CSV injection cell (`test_parse.py`), live tests on Groq (3/3, twice)
 
 ## Team actions (outside P2's paths)
 
-- Bump `pypdf==5.1.0` to `pypdf==6.21.2` in `pyproject.toml`, then add `"pdf"` back to `allowed_doc_types`.
+- Done: `pypdf==6.21.2` and `hypothesis==6.170.9` are pinned in `pyproject.toml`.
 - pip-audit also flags `pip`, `pytest` and `python-dotenv` pins.
 - `make security` calls `bandit` and `pip-audit` from the system PATH and ignores failures, so it silently skips them unless the venv is active. Use `.venv/bin/bandit` / `.venv/bin/pip-audit` or `$(PY) -m` in the Makefile.

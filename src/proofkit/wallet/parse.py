@@ -16,11 +16,12 @@ import csv
 import io
 import re
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from pathlib import Path
 
 from pydantic import ValidationError
-from pypdf import PdfReader
+from pypdf import PdfReader, apply_configuration
+from pypdf.errors import LimitReachedError
 
 from proofkit.common.grounding import locate_quote
 from proofkit.common.injection import injection_spans, overlaps_injection
@@ -45,7 +46,6 @@ LLM_INSTRUCTIONS = (
 )
 DEFAULT_RULES_PATH = Path(__file__).resolve().parents[3] / "config" / "wallet_rules.json"
 CSV_CONFIDENCE = 1.0
-CENT = Decimal("0.01")
 MAX_TEXT_CHARS = 200_000  # same cap the contract puts on content_text
 UNVERIFIED_CONFIDENCE = 0.5  # below min_record_confidence: kept for the audit trail, excluded and flagged
 _MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
@@ -107,13 +107,24 @@ def _checked_text(doc: EarningsDocument, member_id: str, rules: WalletRules) -> 
 
 
 def _pdf_text(doc: EarningsDocument, data: bytes, rules: WalletRules) -> str:
-    """PDF bytes -> text, in memory only. Over the page cap, unreadable, or too much text -> ValueError."""
-    # ponytail: relies on pypdf's own decompression limits; parse in a subprocess with a memory cap if that's not enough
+    """PDF bytes -> text, in memory only. Over the page cap, inflating past max_bytes, unreadable, or too much
+    text -> ValueError naming the doc_id."""
+    # pypdf decodes with zlib max_length, so capping its output limits means no stream is ever inflated past
+    # max_bytes. Text extraction can return without error on a capped stream, so decode each page's contents first:
+    # get_contents() lets LimitReachedError through.
+    cap = rules.max_bytes
     try:
-        reader = PdfReader(io.BytesIO(data))
-        if len(reader.pages) > rules.max_pdf_pages:
-            raise ValueError(f"doc {doc.doc_id}: more than {rules.max_pdf_pages} pages")
-        text = "\n".join(page.extract_text() or "" for page in reader.pages)
+        with apply_configuration(zlib_maximum_output_length=cap, lzw_maximum_output_length=cap,
+                                 run_length_maximum_output_length=cap, brotli_maximum_output_length=cap,
+                                 array_based_stream_maximum_output_length=cap):
+            reader = PdfReader(io.BytesIO(data))
+            if len(reader.pages) > rules.max_pdf_pages:
+                raise ValueError(f"doc {doc.doc_id}: more than {rules.max_pdf_pages} pages")
+            for page in reader.pages:
+                page.get_contents()
+            text = "\n".join(page.extract_text() or "" for page in reader.pages)
+    except LimitReachedError as e:
+        raise ValueError(f"doc {doc.doc_id}: pdf stream inflates past {cap} bytes") from e
     except Exception as e:  # untrusted bytes: any parser failure is a rejected upload
         raise ValueError(f"doc {doc.doc_id}: unreadable pdf") from e
     if len(text) > MAX_TEXT_CHARS:
@@ -183,11 +194,23 @@ def _llm_fields(item: object) -> dict | None:
             "hours": hours, "income": income, "quote": quote, "confidence": float(conf)}
 
 
-def _shares(amount: Decimal, spans: list[tuple[date, date]]) -> list[Decimal]:
-    """Prorate by day, to the cent; the last piece takes the remainder so the pieces sum to `amount` exactly."""
-    total_days = (spans[-1][1] - spans[0][0]).days + 1
-    parts = [(amount * ((e - s).days + 1) / total_days).quantize(CENT, ROUND_HALF_UP) for s, e in spans[:-1]]
-    return [*parts, amount - sum(parts, Decimal("0"))]
+def _shares(amount: Decimal, spans: list[tuple[date, date]]) -> list[Decimal] | None:
+    """Prorate by day in whole cents with the largest-remainder method: each piece gets the floor of its exact
+    share, and the leftover cents go one each to the largest remainders (earliest piece first on ties). Pieces are
+    >= 0 for amount >= 0 and sum to `amount` exactly. None if `amount` isn't whole cents (the contract rejects it)."""
+    if len(spans) == 1:
+        return [amount]
+    cents = amount.scaleb(2)
+    if cents != cents.to_integral_value():
+        return None
+    units = int(cents)
+    days = [(e - s).days + 1 for s, e in spans]
+    total = sum(days)
+    pieces = [units * d // total for d in days]
+    remainders = [units * d % total for d in days]
+    for k in sorted(range(len(days)), key=lambda k: (-remainders[k], k))[:units - sum(pieces)]:
+        pieces[k] += 1
+    return [Decimal(p).scaleb(-2) for p in pieces]
 
 
 def _records(doc: EarningsDocument, member_id: str, i: int, rules: WalletRules, *, platform: str, start: date,
@@ -201,9 +224,15 @@ def _records(doc: EarningsDocument, member_id: str, i: int, rules: WalletRules, 
     platform = max((k for k in rules.known_platforms if platform.startswith(k + "_")), key=len, default=platform)
     if platform not in rules.known_platforms:
         confidence = min(confidence, UNVERIFIED_CONFIDENCE)
+    if hours is not None and hours > 24 * ((end - start).days + 1):
+        # More than 24 hours a day is impossible: keep the statement for the audit trail, but without hours and
+        # below the confidence threshold, so evaluate_months excludes it and flags every month it touches.
+        hours, confidence = None, min(confidence, UNVERIFIED_CONFIDENCE)
     spans = month_spans(start, end) if (end - start).days > 30 else [(start, end)]
     incomes = _shares(income, spans)
     hours_parts = [None] * len(spans) if hours is None else _shares(hours, spans)
+    if incomes is None or hours_parts is None:
+        return []
     try:
         return [EarningsRecord(record_id=f"R-{doc.doc_id}-{i + n}", member_id=member_id, source_doc_id=doc.doc_id,
                                platform=platform, period_start=s, period_end=e, hours=h, gross_income=inc,
@@ -215,7 +244,6 @@ def _records(doc: EarningsDocument, member_id: str, i: int, rules: WalletRules, 
 
 def _parse_csv(doc: EarningsDocument, text: str, member_id: str, rules: WalletRules) -> list[EarningsRecord]:
     # Row by row on raw lines, so each record's source_quote is the exact line it came from.
-    # ponytail: a row longer than 31 days is dropped, not split by month; split it when real exports need that.
     lines = text.splitlines()
     try:
         header = [h.strip().lower() for h in next(csv.reader(lines[:1]), [])]
