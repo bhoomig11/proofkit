@@ -1,0 +1,46 @@
+{
+  "member_id": "SYN-0048",
+  "notes_processed": [
+    "N-0048-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0048-a-0",
+      "note_id": "N-0048-a",
+      "note_date": "2026-09-20",
+      "condition": "Depression",
+      "icd10": "F32.A",
+      "status": "negated",
+      "quote": "denies depression",
+      "quote_start": 391,
+      "quote_end": 408,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0048-a-1",
+      "note_id": "N-0048-a",
+      "note_date": "2026-09-20",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "family_history",
+      "quote": "Father with heart failure",
+      "quote_start": 491,
+      "quote_end": 516,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0048-a-2",
+      "note_id": "N-0048-a",
+      "note_date": "2026-09-20",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 1071,
+      "quote_end": 1093,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

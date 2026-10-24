@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0013",
+  "notes_processed": [
+    "N-0013-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0013-a-0",
+      "note_id": "N-0013-a",
+      "note_date": "2026-09-09",
+      "condition": "Rheumatoid arthritis",
+      "icd10": "M06.9",
+      "status": "family_history",
+      "quote": "Mother with rheumatoid arthritis",
+      "quote_start": 581,
+      "quote_end": 613,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0013-a-1",
+      "note_id": "N-0013-a",
+      "note_date": "2026-09-09",
+      "condition": "Malignant neoplasm of breast",
+      "icd10": "C50.919",
+      "status": "current",
+      "quote": "Malignant neoplasm of breast",
+      "quote_start": 1121,
+      "quote_end": 1149,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0013-a-2",
+      "note_id": "N-0013-a",
+      "note_date": "2026-09-09",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 1387,
+      "quote_end": 1409,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0013-a-3",
+      "note_id": "N-0013-a",
+      "note_date": "2026-09-09",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1562,
+      "quote_end": 1573,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

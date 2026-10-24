@@ -1,0 +1,34 @@
+{
+  "member_id": "SYN-0018",
+  "notes_processed": [
+    "N-0018-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0018-a-0",
+      "note_id": "N-0018-a",
+      "note_date": "2026-02-26",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "family_history",
+      "quote": "Father with heart failure",
+      "quote_start": 609,
+      "quote_end": 634,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0018-a-1",
+      "note_id": "N-0018-a",
+      "note_date": "2026-02-26",
+      "condition": "Chronic kidney disease, stage 4",
+      "icd10": "N18.4",
+      "status": "current",
+      "quote": "Chronic kidney disease stage 4",
+      "quote_start": 1153,
+      "quote_end": 1183,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

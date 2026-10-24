@@ -1,0 +1,34 @@
+{
+  "member_id": "SYN-0021",
+  "notes_processed": [
+    "N-0021-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0021-a-0",
+      "note_id": "N-0021-a",
+      "note_date": "2026-01-01",
+      "condition": "Chest pain",
+      "icd10": "R07.9",
+      "status": "negated",
+      "quote": "Denies chest pain",
+      "quote_start": 580,
+      "quote_end": 597,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0021-a-1",
+      "note_id": "N-0021-a",
+      "note_date": "2026-01-01",
+      "condition": "Other psychoactive substance dependence",
+      "icd10": "F19.20",
+      "status": "current",
+      "quote": "Psychoactive substance dependence",
+      "quote_start": 1185,
+      "quote_end": 1218,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

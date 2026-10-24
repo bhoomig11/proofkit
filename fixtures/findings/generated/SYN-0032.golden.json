@@ -1,0 +1,46 @@
+{
+  "member_id": "SYN-0032",
+  "notes_processed": [
+    "N-0032-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0032-a-0",
+      "note_id": "N-0032-a",
+      "note_date": "2026-09-13",
+      "condition": "Shortness of breath",
+      "icd10": "R06.02",
+      "status": "negated",
+      "quote": "No shortness of breath",
+      "quote_start": 477,
+      "quote_end": 499,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0032-a-1",
+      "note_id": "N-0032-a",
+      "note_date": "2026-09-13",
+      "condition": "Schizophrenia",
+      "icd10": "F20.9",
+      "status": "family_history",
+      "quote": "Sister with schizophrenia",
+      "quote_start": 575,
+      "quote_end": 600,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0032-a-2",
+      "note_id": "N-0032-a",
+      "note_date": "2026-09-13",
+      "condition": "Epilepsy",
+      "icd10": "G40.909",
+      "status": "current",
+      "quote": "Epilepsy",
+      "quote_start": 1149,
+      "quote_end": 1157,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

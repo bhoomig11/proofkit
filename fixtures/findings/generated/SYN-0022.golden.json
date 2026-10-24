@@ -1,0 +1,82 @@
+{
+  "member_id": "SYN-0022",
+  "notes_processed": [
+    "N-0022-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0022-a-0",
+      "note_id": "N-0022-a",
+      "note_date": "2026-03-18",
+      "condition": "Malignant neoplasm of colon",
+      "icd10": "C18.9",
+      "status": "historical",
+      "quote": "History of colon cancer, s/p resection in 2022",
+      "quote_start": 405,
+      "quote_end": 451,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0022-a-1",
+      "note_id": "N-0022-a",
+      "note_date": "2026-03-18",
+      "condition": "Malignant neoplasm of breast",
+      "icd10": "C50.919",
+      "status": "family_history",
+      "quote": "Mother with breast cancer",
+      "quote_start": 575,
+      "quote_end": 600,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0022-a-2",
+      "note_id": "N-0022-a",
+      "note_date": "2026-03-18",
+      "condition": "Rheumatoid arthritis",
+      "icd10": "M06.9",
+      "status": "family_history",
+      "quote": "Mother with rheumatoid arthritis",
+      "quote_start": 602,
+      "quote_end": 634,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0022-a-3",
+      "note_id": "N-0022-a",
+      "note_date": "2026-03-18",
+      "condition": "Mild intermittent asthma",
+      "icd10": "J45.20",
+      "status": "uncertain",
+      "quote": "Possible mild intermittent asthma",
+      "quote_start": 1119,
+      "quote_end": 1152,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0022-a-4",
+      "note_id": "N-0022-a",
+      "note_date": "2026-03-18",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1350,
+      "quote_end": 1361,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0022-a-5",
+      "note_id": "N-0022-a",
+      "note_date": "2026-03-18",
+      "condition": "Anemia",
+      "icd10": "D64.9",
+      "status": "current",
+      "quote": "Anemia",
+      "quote_start": 1491,
+      "quote_end": 1497,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

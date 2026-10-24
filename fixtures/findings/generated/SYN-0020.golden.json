@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0020",
+  "notes_processed": [
+    "N-0020-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0020-a-0",
+      "note_id": "N-0020-a",
+      "note_date": "2025-11-28",
+      "condition": "Chest pain",
+      "icd10": "R07.9",
+      "status": "negated",
+      "quote": "Denies chest pain",
+      "quote_start": 491,
+      "quote_end": 508,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0020-a-1",
+      "note_id": "N-0020-a",
+      "note_date": "2025-11-28",
+      "condition": "Other psychoactive substance dependence",
+      "icd10": "F19.20",
+      "status": "current",
+      "quote": "Psychoactive substance dependence",
+      "quote_start": 1201,
+      "quote_end": 1234,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0020-a-2",
+      "note_id": "N-0020-a",
+      "note_date": "2025-11-28",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1495,
+      "quote_end": 1506,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0020-a-3",
+      "note_id": "N-0020-a",
+      "note_date": "2025-11-28",
+      "condition": "Anemia",
+      "icd10": "D64.9",
+      "status": "current",
+      "quote": "Anemia",
+      "quote_start": 1630,
+      "quote_end": 1636,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

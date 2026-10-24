@@ -1,0 +1,82 @@
+{
+  "member_id": "SYN-0027",
+  "notes_processed": [
+    "N-0027-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0027-a-0",
+      "note_id": "N-0027-a",
+      "note_date": "2026-05-28",
+      "condition": "Depression",
+      "icd10": "F32.A",
+      "status": "negated",
+      "quote": "denies depression",
+      "quote_start": 572,
+      "quote_end": 589,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0027-a-1",
+      "note_id": "N-0027-a",
+      "note_date": "2026-05-28",
+      "condition": "Schizophrenia",
+      "icd10": "F20.9",
+      "status": "family_history",
+      "quote": "Sister with schizophrenia",
+      "quote_start": 671,
+      "quote_end": 696,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0027-a-2",
+      "note_id": "N-0027-a",
+      "note_date": "2026-05-28",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "family_history",
+      "quote": "Father with heart failure",
+      "quote_start": 698,
+      "quote_end": 723,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0027-a-3",
+      "note_id": "N-0027-a",
+      "note_date": "2026-05-28",
+      "condition": "Chronic kidney disease, stage 4",
+      "icd10": "N18.4",
+      "status": "historical",
+      "quote": "History of chronic kidney disease stage 4, resolved after kidney transplant",
+      "quote_start": 1273,
+      "quote_end": 1348,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0027-a-4",
+      "note_id": "N-0027-a",
+      "note_date": "2026-05-28",
+      "condition": "Asthma",
+      "icd10": "J45.909",
+      "status": "current",
+      "quote": "Asthma, uncomplicated",
+      "quote_start": 1566,
+      "quote_end": 1587,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0027-a-5",
+      "note_id": "N-0027-a",
+      "note_date": "2026-05-28",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 1695,
+      "quote_end": 1717,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

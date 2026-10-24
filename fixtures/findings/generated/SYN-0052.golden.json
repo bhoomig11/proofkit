@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0052",
+  "notes_processed": [
+    "N-0052-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0052-a-0",
+      "note_id": "N-0052-a",
+      "note_date": "2026-10-18",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "ruled_out",
+      "quote": "R/o CHF",
+      "quote_start": 1055,
+      "quote_end": 1062,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0052-a-1",
+      "note_id": "N-0052-a",
+      "note_date": "2026-10-18",
+      "condition": "Bipolar disorder",
+      "icd10": "F31.9",
+      "status": "uncertain",
+      "quote": "Concern for bipolar disorder",
+      "quote_start": 1257,
+      "quote_end": 1285,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0052-a-2",
+      "note_id": "N-0052-a",
+      "note_date": "2026-10-18",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 1426,
+      "quote_end": 1448,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0052-a-3",
+      "note_id": "N-0052-a",
+      "note_date": "2026-10-18",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1609,
+      "quote_end": 1620,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

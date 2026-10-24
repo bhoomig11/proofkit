@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0006",
+  "notes_processed": [
+    "N-0006-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0006-a-0",
+      "note_id": "N-0006-a",
+      "note_date": "2026-10-16",
+      "condition": "Rheumatoid arthritis",
+      "icd10": "M06.9",
+      "status": "family_history",
+      "quote": "Mother with rheumatoid arthritis",
+      "quote_start": 679,
+      "quote_end": 711,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0006-a-1",
+      "note_id": "N-0006-a",
+      "note_date": "2026-10-16",
+      "condition": "Other psychoactive substance dependence",
+      "icd10": "F19.20",
+      "status": "current",
+      "quote": "Psychoactive substance dependence",
+      "quote_start": 1287,
+      "quote_end": 1320,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0006-a-2",
+      "note_id": "N-0006-a",
+      "note_date": "2026-10-16",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1610,
+      "quote_end": 1621,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0006-a-3",
+      "note_id": "N-0006-a",
+      "note_date": "2026-10-16",
+      "condition": "Anemia",
+      "icd10": "D64.9",
+      "status": "current",
+      "quote": "Anemia",
+      "quote_start": 1739,
+      "quote_end": 1745,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

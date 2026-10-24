@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0033",
+  "notes_processed": [
+    "N-0033-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0033-a-0",
+      "note_id": "N-0033-a",
+      "note_date": "2026-07-29",
+      "condition": "Type 2 diabetes mellitus",
+      "icd10": "E11.9",
+      "status": "current",
+      "quote": "Type 2 diabetes mellitus without complications",
+      "quote_start": 1168,
+      "quote_end": 1214,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0033-a-1",
+      "note_id": "N-0033-a",
+      "note_date": "2026-07-29",
+      "condition": "Anemia",
+      "icd10": "D64.9",
+      "status": "current",
+      "quote": "Anemia",
+      "quote_start": 1388,
+      "quote_end": 1394,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0033-a-2",
+      "note_id": "N-0033-a",
+      "note_date": "2026-07-29",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "ruled_out",
+      "quote": "R/o CHF",
+      "quote_start": 1478,
+      "quote_end": 1485,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0033-a-3",
+      "note_id": "N-0033-a",
+      "note_date": "2026-07-29",
+      "condition": "Bipolar disorder",
+      "icd10": "F31.9",
+      "status": "uncertain",
+      "quote": "Concern for bipolar disorder",
+      "quote_start": 1684,
+      "quote_end": 1712,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

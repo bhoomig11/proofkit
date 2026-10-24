@@ -1,0 +1,46 @@
+{
+  "member_id": "SYN-0050",
+  "notes_processed": [
+    "N-0050-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0050-a-0",
+      "note_id": "N-0050-a",
+      "note_date": "2026-08-13",
+      "condition": "Bipolar disorder",
+      "icd10": "F31.9",
+      "status": "uncertain",
+      "quote": "Concern for bipolar disorder",
+      "quote_start": 1037,
+      "quote_end": 1065,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0050-a-1",
+      "note_id": "N-0050-a",
+      "note_date": "2026-08-13",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 1252,
+      "quote_end": 1274,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0050-a-2",
+      "note_id": "N-0050-a",
+      "note_date": "2026-08-13",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1433,
+      "quote_end": 1444,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}
