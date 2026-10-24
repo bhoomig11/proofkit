@@ -259,81 +259,94 @@ flowchart LR
 
 ## 5. Dataset build (outside this repo)
 
-The extra synthetic personas are built in a separate folder (`proofkit-data/`) and exported into the
-fixture files above. Only the export touches this repo.
+Extra synthetic members are built in a separate folder that is not in git (`proofkit/` data project).
+Its only output is **2 final files**. The repo fixtures are generated from those 2 files, so there is one
+source of truth and nothing to keep in sync by hand.
+
+### Build steps
+
+```mermaid
+flowchart TD
+  SY["Synthea<br/>1,596 patients"] --> CL["02 clean<br/>1,499 patients, 19-64, no identifiers"]
+  CMS["CMS ICD-10-CM FY2027"] --> MAP["03 SNOMED to ICD-10 map<br/>27 codes, verified"]
+  CL --> MAP
+  CL --> PER["04 personas + note plan<br/>52 generated + 5 seeds"]
+  MAP --> PER
+  PER --> TR["05 note truth<br/>required sentences + answer key"]
+  TR --> TK["05b writer tasks<br/>one per note"]
+  TK --> WR["writer<br/>Claude Code or Kiro"]
+  WR --> TX["note text"]
+  TX --> VA["06 validator<br/>+ 06b blind check<br/>+ 06c human review"]
+  VA --> EX["07 export<br/>PASS notes only"]
+  EX --> FN["final/proofkit_notes.jsonl"]
+  EX --> FF["final/proofkit_findings.csv"]
+  FN --> FX["repo fixtures"]
+  FF --> FX
+```
+
+The truth (which conditions, which status, the exact sentences) is decided in code **before** a note is
+written. The writer only adds prose around those sentences, so the answer key never depends on the writer.
+
+### The final dataset (2 files)
 
 ```mermaid
 erDiagram
-  SYNTHEA_PATIENTS ||--o{ SYNTHEA_ENCOUNTERS : "patient_id"
-  SYNTHEA_PATIENTS ||--o{ SYNTHEA_CONDITIONS : "patient_id"
-  SYNTHEA_ENCOUNTERS ||--o{ SYNTHEA_CONDITIONS : "encounter_id"
-  SYNTHEA_CONDITIONS }o--|| SNOMED_ICD10_MAP : "snomed_code"
-  SYNTHEA_PATIENTS ||--|| PERSONAS : "patient_id"
-  PERSONAS ||--o{ NOTE_PLAN : "member_id"
-  SYNTHEA_ENCOUNTERS ||--o| NOTE_PLAN : "encounter_id"
-  NOTE_PLAN ||--|| NOTE_TRUTH : "note_id"
-  NOTE_TRUTH ||--|| NOTE_TEXT : "note_id"
-  NOTE_TEXT ||--o{ NOTE_LABELS : "note_id"
-
-  SYNTHEA_PATIENTS {
-    uuid Id PK "patient_id"
-    date BIRTHDATE
-    string GENDER
-    string FIRST
-  }
-  SYNTHEA_CONDITIONS {
-    uuid PATIENT FK
-    uuid ENCOUNTER FK
-    date START
-    date STOP "blank = active"
-    int CODE FK "SNOMED"
-  }
-  SNOMED_ICD10_MAP {
-    int snomed_code PK
-    string icd10 "checked against CMS FY2027"
-    bool qualifies "via frailty_rules.json"
-  }
-  PERSONAS {
-    string member_id PK "SYN-0006 and up"
-    uuid patient_id FK
-    string scenario "S1 S3-S9, SEED"
-    string expected_status
-  }
-  NOTE_PLAN {
-    string note_id PK
-    uuid encounter_id FK
+  FINAL_NOTES ||--o{ FINAL_FINDINGS : "note_id"
+  FINAL_NOTES {
+    string note_id PK "N-0006-a"
+    string member_id "SYN-0006"
+    string scenario "S1, S3-S9, SEED"
     date note_date
+    string author_role
+    string expected_status "protected, at_risk, or blank for S9"
+    string expected_protected_by "exemption:medically_frail, compliance:income ..."
+    string text "the note"
   }
-  NOTE_TRUTH {
-    string note_id PK
-    list items "required sentences + labels"
-  }
-  NOTE_TEXT {
-    string note_id PK
-    string text "becomes ClinicalNote"
-  }
-  NOTE_LABELS {
+  FINAL_FINDINGS {
     string note_id FK
-    string icd10
-    string status
-    int quote_start "becomes Finding"
+    string finding_id PK "F-N-0006-a-0, quote order"
+    string condition
+    string icd10 "condition's own code"
+    enum status "6 values"
+    string quote "exact substring of text"
+    int quote_start
+    int quote_end
+    bool qualifies "matches a frailty rule prefix"
   }
 ```
 
-| Dataset table | Exported to repo as |
+| Final file | One row per | Becomes in the repo |
+|---|---|---|
+| `final/proofkit_notes.jsonl` | note | `fixtures/notes/{note_id}.json` (`ClinicalNote`) |
+| `final/proofkit_findings.csv` | answer-key finding | `fixtures/findings/{member_id}.golden.json` (`FindingsBundle`) |
+| member and scenario columns of the notes file | member | `Member` rows in `fixtures/members/members.json` (owner to be agreed) |
+
+Synthea's `patient_id` stays in the build folder. Inside the repo a person is only ever a `member_id`.
+
+### What every exported note has passed
+
+| Check | How |
 |---|---|
-| `personas` + Synthea first name | `Member` rows in `fixtures/members/members.json` |
-| `note_text` + `note_plan` | `fixtures/notes/{note_id}.json` (`ClinicalNote`) |
-| `note_labels` | `fixtures/findings/{member_id}.golden.json` (`FindingsBundle`) |
+| Required sentences present exactly once, word for word | validator |
+| 250-450 words, SOAP sections, age/sex, only the visit date | validator |
+| No names, phone numbers, addresses, MRNs, SSNs | validator |
+| Nothing the repo's injection detector would flag | validator, using `proofkit.common.injection` |
+| No extra diagnosis words or denied symptoms outside the answer key | validator |
+| Codes exist and are billable in CMS ICD-10-CM FY2027 | validator |
+| Loads into `ClinicalNote` and `Finding`; quotes found by `locate_quote` | validator, using the repo's own code |
+| Scenario matches the answer key (only S1/S3 have a current qualifying finding) | validator |
+| An independent reader who never saw the answer key labels it the same way | blind check (pilot: 18/18 findings matched) |
+| A person spot-checked it | review page |
 
-`patient_id` (Synthea) never enters the repo. Inside the app a person is only ever a `member_id`.
+### Status (2026-10-24)
 
-Status: the 5 seed members `SYN-0001`..`SYN-0005` are in the repo now. Generated members `SYN-0006`
-and up are being validated and are not exported yet.
+- 57 members planned: 5 hand-written seeds (`SYN-0001`..`SYN-0005`, already in the repo) + 52 generated.
+- 5 generated pilot notes written and fully checked. The other 47 are being written.
+- Nothing generated has been exported to the repo yet. The export runs once all notes pass.
 
 ## 6. Open decisions
 
 - Impairment severity (mild vs severe) has no field in `Finding`. Out of scope for this hackathon.
-- Gig platform names: real names in the fixtures vs invented names in the dataset spec (P2 to decide).
+- Gig platform names: P2 merged the wallet with real platform names; the dataset spec's invented names are not used.
 - `fixtures/members/` has no owner in `CLAUDE.md`.
 - `MF-DD-01` lists F70-F73 but not F79 (unspecified intellectual disability) (P1B to decide).
