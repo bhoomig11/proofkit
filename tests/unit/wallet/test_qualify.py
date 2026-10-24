@@ -41,3 +41,28 @@ def dup(rid, doc, conf=0.95):
 ])
 def test_dedupe_only_across_docs_and_after_confidence_filter(rules, records, hours):
     assert evaluate_months(records, rules)[0].total_hours == D(hours)
+
+
+def stmt(rid, doc, start, end, hours, platform="doordash"):
+    return EarningsRecord(record_id=rid, member_id="SYN-0001", source_doc_id=doc, platform=platform,
+                          period_start=start, period_end=end, hours=D(hours), gross_income=D(hours) * 10,
+                          source_quote="q", confidence=0.95)
+
+
+def test_overlapping_statements_from_different_docs_are_not_double_counted(rules):
+    monthly = stmt("m", "d1", date(2027, 2, 1), date(2027, 2, 28), "80")
+    weekly = stmt("w", "d2", date(2027, 2, 1), date(2027, 2, 7), "20")  # same days, uploaded again as a weekly
+    m = evaluate_months([monthly, weekly], rules)[0]
+    assert m.total_hours == D("0.00") and not m.qualifies
+    assert m.needs_review and any("overlap" in r for r in m.review_reasons)
+
+
+@pytest.mark.parametrize("records", [
+    [stmt("a", "d1", date(2027, 2, 1), date(2027, 2, 28), "40"),
+     stmt("b", "d2", date(2027, 2, 1), date(2027, 2, 28), "40", platform="uber")],  # two platforms at once is normal
+    [stmt("a", "d1", date(2027, 2, 1), date(2027, 2, 14), "40"),
+     stmt("b", "d2", date(2027, 2, 15), date(2027, 2, 28), "40")],                  # back to back, no overlap
+])
+def test_non_overlapping_or_other_platform_records_both_count(rules, records):
+    m = evaluate_months(records, rules)[0]
+    assert m.total_hours == D("80.00") and not m.needs_review
