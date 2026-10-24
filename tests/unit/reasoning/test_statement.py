@@ -142,3 +142,24 @@ def test_sign_off_survives_worst_case_length(rules):
     assert len(s) <= 5000
     assert s.rstrip().endswith("MassHealth makes all eligibility determinations.")
     assert "must be reviewed and signed by a licensed clinician" in s
+
+
+# ── security review fixes (Phase 6) ─────────────────────────────────────────
+@pytest.mark.parametrize("bad", [
+    "Lupus is active; also f20.9.",                            # lowercase invented code
+    "Lupus is active; also F209.",                             # invented code without the dot
+    "Lupus is active. The patient is exempt from work requirements.",
+    "Lupus; she qualifies for a MassHealth exemption.",
+    "Lupus. Patient is eligible for medically frail status.",
+])
+def test_summaries_with_disguised_codes_or_eligibility_claims_fall_back(rules, bad):
+    s, _ = draft(bad, rules=rules)
+    assert bad not in s
+    assert "The medical record documents" in s
+
+
+@pytest.mark.parametrize("ok", ["Lupus (M32) with renal involvement is documented.",
+                                "Lupus (m32.14) with renal involvement is documented."])
+def test_summary_may_name_the_evidence_category_in_any_case(rules, ok):
+    s, _ = draft(ok, rules=rules)
+    assert ok in s
