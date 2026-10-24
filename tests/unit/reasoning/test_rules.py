@@ -82,3 +82,16 @@ def test_rules_are_immutable(frailty_rules_path):
     rules = load_frailty_rules(frailty_rules_path)
     with pytest.raises(Exception):
         rules.rules_version = "tampered"
+
+
+def test_every_seed_rule_has_lowercase_condition_terms(frailty_rules_path):
+    rules = load_frailty_rules(frailty_rules_path)
+    for r in rules.rules:
+        assert r.terms, r.rule_id
+        assert all(t == t.lower().strip() and t for t in r.terms), r.rule_id
+
+
+def test_uppercase_or_blank_terms_rejected(tmp_path, raw):
+    raw["rules"][0]["terms"] = ["Schizophrenia"]
+    with pytest.raises(ValueError):
+        load_frailty_rules(write(tmp_path, raw))

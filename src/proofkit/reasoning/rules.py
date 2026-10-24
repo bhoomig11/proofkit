@@ -41,7 +41,15 @@ class Rule(_Strict):
     exemption_type: ExemptionType
     label: str = Field(min_length=1)
     icd10_prefixes: list[Icd10Prefix] = Field(min_length=1)
+    terms: list[str] = Field(default_factory=list, description="lowercase condition words, used to vet LLM text")
     verify: bool = True
+
+    @field_validator("terms")
+    @classmethod
+    def _lowercase_terms(cls, v: list[str]) -> list[str]:
+        if any(not t or t != t.strip().lower() for t in v):
+            raise ValueError("terms must be non-empty, lowercase and trimmed")
+        return v
 
     @field_validator("exemption_type")
     @classmethod
