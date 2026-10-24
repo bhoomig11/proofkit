@@ -66,3 +66,14 @@ def test_overlapping_statements_from_different_docs_are_not_double_counted(rules
 def test_non_overlapping_or_other_platform_records_both_count(rules, records):
     m = evaluate_months(records, rules)[0]
     assert m.total_hours == D("80.00") and not m.needs_review
+
+
+def test_averaging_flag_cannot_be_turned_on_until_implemented(wallet_rules_path, tmp_path):
+    """Otherwise setting it true would be silently ignored and members would get the wrong basis."""
+    import json
+    cfg = json.loads(wallet_rules_path.read_text())
+    cfg["allow_seasonal_income_averaging"]["value"] = True
+    p = tmp_path / "w.json"
+    p.write_text(json.dumps(cfg))
+    with pytest.raises(ValueError, match="averaging"):
+        load_wallet_rules(p)
