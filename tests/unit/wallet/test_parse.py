@@ -1,3 +1,4 @@
+import base64
 from datetime import date
 from decimal import Decimal as D
 
@@ -115,3 +116,71 @@ def test_period_dates_must_be_in_the_document(rules, text, quote, start, end, tr
     doc = EarningsDocument(doc_id="t1", member_id="SYN-0001", filename="u.txt", doc_type="text", content_text=text)
     (r,) = parse_documents([doc], "SYN-0001", llm, rules=rules)
     assert (r.confidence >= rules.min_record_confidence) is trusted
+
+
+def pdf_bytes(*pages: str) -> bytes:
+    """Minimal valid PDF, one text line per page, built in memory (no files)."""
+    n = len(pages)
+    objs = ["<< /Type /Catalog /Pages 2 0 R >>",
+            f"<< /Type /Pages /Kids [{' '.join(f'{4 + 2 * i} 0 R' for i in range(n))}] /Count {n} >>",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"]
+    for i, text in enumerate(pages):
+        lines = " T* ".join(f"({t})Tj" for t in text.split("\n"))
+        stream = f"BT /F1 12 Tf 14 TL 72 720 Td {lines} ET"
+        objs.append(f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> "
+                    f"/Contents {5 + 2 * i} 0 R >>")
+        objs.append(f"<< /Length {len(stream)} >>\nstream\n{stream}\nendstream")
+    out, offsets = b"%PDF-1.4\n", []
+    for i, o in enumerate(objs, 1):
+        offsets.append(len(out))
+        out += f"{i} 0 obj\n{o}\nendobj\n".encode()
+    xref = len(out)
+    out += f"xref\n0 {len(objs) + 1}\n0000000000 65535 f \n".encode()
+    out += "".join(f"{x:010} 00000 n \n" for x in offsets).encode()
+    out += f"trailer\n<< /Size {len(objs) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
+    return out
+
+
+def b64_doc(data: bytes, doc_type="pdf", doc_id="p1"):
+    return EarningsDocument(doc_id=doc_id, member_id="SYN-0001", filename="x.pdf", doc_type=doc_type,
+                            content_b64=base64.b64encode(data).decode())
+
+
+def test_pdf_text_extracted_in_memory_then_grounded(rules):
+    doc = b64_doc(pdf_bytes("Uber statement 02/01/2027 to 02/28/2027\nOnline hours 92.5\nGross fares 1,480.00 USD"))
+    llm = llm_one(source_quote="Online hours 92.5 Gross fares 1,480.00 USD")
+    (r,) = parse_documents([doc], "SYN-0001", llm, rules=rules)
+    assert (r.source_doc_id, r.hours, r.gross_income) == ("p1", D("92.5"), D("1480.00"))
+    assert "Online hours 92.5" in llm.calls[0]["user"]
+
+
+@pytest.mark.parametrize("doc", [
+    b64_doc(pdf_bytes(*["page"] * 21)),                          # over max_pdf_pages (20)
+    b64_doc(b"%PDF-1.4 this is not really a pdf"),               # corrupt
+    EarningsDocument(doc_id="p1", member_id="SYN-0001", filename="x.pdf", doc_type="pdf", content_b64="@@not b64@@"),
+    EarningsDocument(doc_id="p1", member_id="SYN-0001", filename="x.pdf", doc_type="pdf", content_text="text"),
+    b64_doc(b"\xff\xfe not utf-8", doc_type="text"),
+])
+def test_bad_uploads_rejected(rules, doc):
+    with pytest.raises(ValueError):
+        parse_documents([doc], "SYN-0001", FakeLLM({}), rules=rules)
+
+
+def test_disallowed_type_rejected(rules):
+    strict = rules.model_copy(update={"allowed_doc_types": frozenset(rules.allowed_doc_types) - {"image"}})
+    with pytest.raises(ValueError):
+        parse_documents([b64_doc(b"\x89PNG", doc_type="image")], "SYN-0001", FakeLLM({}), rules=strict)
+
+
+def test_image_gives_no_records_and_no_llm_call(rules):
+    llm = FakeLLM({})
+    assert parse_documents([b64_doc(b"\x89PNG", doc_type="image")], "SYN-0001", llm, rules=rules) == []
+    assert llm.calls == []
+
+
+def test_every_doc_checked_before_any_llm_call(rules):
+    llm = llm_one()
+    bad = EarningsDocument(doc_id="t2", member_id="SYN-0002", filename="u.txt", doc_type="text", content_text="x")
+    with pytest.raises(ValueError):
+        parse_documents([text_doc(), bad], "SYN-0001", llm, rules=rules)
+    assert llm.calls == []
