@@ -35,6 +35,8 @@ class WalletRules(BaseModel):
     def _income_is_derived(self) -> "WalletRules":
         if self.monthly_income_required != self.federal_minimum_wage * self.monthly_hours_required:
             raise ValueError("monthly_income_required must equal federal_minimum_wage * monthly_hours_required")
+        if self.allow_seasonal_income_averaging:
+            raise ValueError("seasonal income averaging is not implemented; keep allow_seasonal_income_averaging false")
         return self
 
 
