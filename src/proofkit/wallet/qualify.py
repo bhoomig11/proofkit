@@ -25,17 +25,24 @@ def _next_month(d: date) -> date:
     return (d.replace(day=1) + timedelta(days=32)).replace(day=1)
 
 
+def month_spans(start: date, end: date) -> list[tuple[date, date]]:
+    """Split the inclusive period [start, end] at calendar-month boundaries."""
+    out = []
+    while start <= end:
+        stop = min(end, _next_month(start) - timedelta(days=1))
+        out.append((start, stop))
+        start = stop + timedelta(days=1)
+    return out
+
+
 def _split_by_month(r: EarningsRecord) -> list[tuple[str, _Slice]]:
     """Prorate a record across calendar months by day count. Unrounded; rounding happens on the totals."""
     total_days = (r.period_end - r.period_start).days + 1
     out = []
-    start = r.period_start
-    while start <= r.period_end:
-        end = min(r.period_end, _next_month(start) - timedelta(days=1))
+    for start, end in month_spans(r.period_start, r.period_end):
         days = (end - start).days + 1
         hours = None if r.hours is None else r.hours * days / total_days
         out.append((start.strftime("%Y-%m"), _Slice(r.record_id, hours, r.gross_income * days / total_days)))
-        start = end + timedelta(days=1)
     return out
 
 

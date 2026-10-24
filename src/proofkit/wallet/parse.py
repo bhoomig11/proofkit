@@ -16,7 +16,7 @@ import csv
 import io
 import re
 from datetime import date
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -27,6 +27,7 @@ from proofkit.common.injection import injection_spans, overlaps_injection
 from proofkit.common.llm import LLMClient, LLMError
 from proofkit.common.redact import get_logger
 from proofkit.contracts import DocumentType, EarningsDocument, EarningsRecord
+from proofkit.wallet.qualify import month_spans
 from proofkit.wallet.rules import WalletRules, load_wallet_rules
 from proofkit.wallet.tokens import hours_in, money_in, parse_hours, parse_money
 
@@ -44,6 +45,7 @@ LLM_INSTRUCTIONS = (
 )
 DEFAULT_RULES_PATH = Path(__file__).resolve().parents[3] / "config" / "wallet_rules.json"
 CSV_CONFIDENCE = 1.0
+CENT = Decimal("0.01")
 MAX_TEXT_CHARS = 200_000  # same cap the contract puts on content_text
 UNVERIFIED_CONFIDENCE = 0.5  # below min_record_confidence: kept for the audit trail, excluded and flagged
 _MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
@@ -140,9 +142,7 @@ def _parse_text(doc: EarningsDocument, text: str, member_id: str, llm: LLMClient
         fields["quote"] = span.text  # the document's own characters, not the LLM's copy
         if not (_date_in(text, fields["start"]) and _date_in(text, fields["end"])):
             fields["confidence"] = min(fields["confidence"], UNVERIFIED_CONFIDENCE)
-        rec = _record(doc, member_id, len(out), rules, **fields)
-        if rec:
-            out.append(rec)
+        out += _records(doc, member_id, len(out), rules, **fields)
     log.info("llm doc_id=%s kept=%d dropped=%d", doc.doc_id, len(out), dropped)
     return out
 
@@ -183,21 +183,34 @@ def _llm_fields(item: object) -> dict | None:
             "hours": hours, "income": income, "quote": quote, "confidence": float(conf)}
 
 
-def _record(doc: EarningsDocument, member_id: str, i: int, rules: WalletRules, *, platform: str, start: date,
-            end: date, hours: Decimal | None, income: Decimal, quote: str, confidence: float) -> EarningsRecord | None:
+def _shares(amount: Decimal, spans: list[tuple[date, date]]) -> list[Decimal]:
+    """Prorate by day, to the cent; the last piece takes the remainder so the pieces sum to `amount` exactly."""
+    total_days = (spans[-1][1] - spans[0][0]).days + 1
+    parts = [(amount * ((e - s).days + 1) / total_days).quantize(CENT, ROUND_HALF_UP) for s, e in spans[:-1]]
+    return [*parts, amount - sum(parts, Decimal("0"))]
+
+
+def _records(doc: EarningsDocument, member_id: str, i: int, rules: WalletRules, *, platform: str, start: date,
+             end: date, hours: Decimal | None, income: Decimal, quote: str,
+             confidence: float) -> list[EarningsRecord]:
+    """One statement line -> records, split by calendar month when it covers more than 31 days. [] if invalid."""
     platform = "_".join(platform.lower().replace("-", " ").split())
     if not _PLATFORM.fullmatch(platform):
-        return None  # not a plain name: could be a formula, markup, or injected text
+        return []  # not a plain name: could be a formula, markup, or injected text
     # "DoorDash Dasher", "Uber Eats": a known name followed by product words is that platform. Longest match wins.
     platform = max((k for k in rules.known_platforms if platform.startswith(k + "_")), key=len, default=platform)
     if platform not in rules.known_platforms:
         confidence = min(confidence, UNVERIFIED_CONFIDENCE)
+    spans = month_spans(start, end) if (end - start).days > 30 else [(start, end)]
+    incomes = _shares(income, spans)
+    hours_parts = [None] * len(spans) if hours is None else _shares(hours, spans)
     try:
-        return EarningsRecord(record_id=f"R-{doc.doc_id}-{i}", member_id=member_id, source_doc_id=doc.doc_id,
-                              platform=platform, period_start=start, period_end=end, hours=hours,
-                              gross_income=income, source_quote=quote, confidence=confidence)
+        return [EarningsRecord(record_id=f"R-{doc.doc_id}-{i + n}", member_id=member_id, source_doc_id=doc.doc_id,
+                               platform=platform, period_start=s, period_end=e, hours=h, gross_income=inc,
+                               source_quote=quote, confidence=confidence)
+                for n, ((s, e), h, inc) in enumerate(zip(spans, hours_parts, incomes, strict=True))]
     except ValidationError:
-        return None
+        return []
 
 
 def _parse_csv(doc: EarningsDocument, text: str, member_id: str, rules: WalletRules) -> list[EarningsRecord]:
@@ -231,8 +244,6 @@ def _parse_csv(doc: EarningsDocument, text: str, member_id: str, rules: WalletRu
             continue
         if income is None or income < 0 or (hours_cell and hours is None):
             continue
-        rec = _record(doc, member_id, len(out), rules, platform=platform, start=start, end=end, hours=hours,
-                      income=income, quote=line, confidence=CSV_CONFIDENCE)
-        if rec:
-            out.append(rec)
+        out += _records(doc, member_id, len(out), rules, platform=platform, start=start, end=end, hours=hours,
+                        income=income, quote=line, confidence=CSV_CONFIDENCE)
     return out
