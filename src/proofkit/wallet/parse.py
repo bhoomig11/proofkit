@@ -186,6 +186,8 @@ def _record(doc: EarningsDocument, member_id: str, i: int, rules: WalletRules, *
     platform = "_".join(platform.lower().replace("-", " ").split())
     if not _PLATFORM.fullmatch(platform):
         return None  # not a plain name: could be a formula, markup, or injected text
+    # "DoorDash Dasher", "Uber Eats": a known name followed by product words is that platform. Longest match wins.
+    platform = max((k for k in rules.known_platforms if platform.startswith(k + "_")), key=len, default=platform)
     if platform not in rules.known_platforms:
         confidence = min(confidence, UNVERIFIED_CONFIDENCE)
     try:
