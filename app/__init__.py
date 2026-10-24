@@ -1,1 +1,1 @@
-"""ProofKit Coverage Copilot Streamlit application."""
+"""RenewRight Streamlit application."""

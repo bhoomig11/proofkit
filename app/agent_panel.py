@@ -100,7 +100,6 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
     import streamlit.components.v1 as components
 
     coach = backend or CoachBackend()
-    st.subheader("Coverage Coach")
     st.caption("Ask about your status, proof, or next step. The coach cannot change your result.")
     language_label = st.selectbox("Answer language", tuple(LANGUAGE_OPTIONS), key="coach_language")
     plain = st.toggle("Plain language", value=True, key="coach_plain")

@@ -1,4 +1,4 @@
-"""Pure display formatting helpers for Coverage Copilot."""
+"""Pure display formatting helpers for RenewRight."""
 from __future__ import annotations
 
 import calendar

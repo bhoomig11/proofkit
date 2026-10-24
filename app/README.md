@@ -1,4 +1,4 @@
-# app/: Coverage Copilot (Streamlit UI)
+# app/: RenewRight (Streamlit UI)
 
 ## Run it (works offline, no API key needed)
 ```bash
@@ -6,23 +6,27 @@ python3 -m venv .venv && source .venv/bin/activate      # Python 3.11+
 pip install -e ".[dev,ui]"
 streamlit run app/main.py                                # opens http://localhost:8501
 ```
+Sign in with a demo account, e.g. `maria@example.com` / `maria-demo-2027` (all 5 are listed on the sign-in
+page and in `TEAM_GUIDE.md`), or create your own account.
+
 - **Offline (default):** the evidence pipeline replays the synthetic golden results, and the Coverage Coach answers
   from verified facts with keyword routing. No key, no cost, deterministic, so it's safe for judges.
-- **Live AI:** put `ANTHROPIC_API_KEY=...` in `.env` (never commit it) and switch on "Live AI for the coach" in the
-  sidebar. The coach then routes and words answers with Claude; every fact still comes from tested code.
+- **Live AI:** put `ANTHROPIC_API_KEY=...` in `.env` (never commit it) and switch on "Live AI for Coverage Coach" in the
+  Accessibility menu. The coach then routes and words answers with Claude; every fact still comes from tested code.
 
 ## What's on screen
 | Area | What it shows |
 |---|---|
-| Sidebar | 5 synthetic personas, demo tour (Maria → James → Dev → red team), theme (system/light/dark), larger text, more spacing, reduce motion, Live AI switch |
-| Header | Pip the mascot + status (icon + text + color), deadline countdown, what protects the member |
+| Sign in / Create account | Email + password (salted hashes), 5 demo accounts listed for judges, new sign-ups get a welcome page with an example member |
+| Nav bar | RenewRight brand · Accessibility menu (theme system/light/dark, larger text, more spacing, reduce motion, Live AI) · "Signed in as …" · Sign out |
+| Status | Pip the mascot + status (text + color), deadline countdown, what protects the member |
 | Next steps | Action checklist with due dates |
 | Why | Exemption decision (rules, review reasons) and the 80 h / $580 check per month |
 | Evidence | Clinical notes: counted quotes highlighted, denied/ruled-out/family/past struck through; clinician statement |
 | Hours & money | Progress toward 80 h and $580, proof badges, what-if sliders (real rules on a copy) |
 | Proof packet | Escaped HTML download (`proofkit.integration.build_packet_html`) |
 | Red team | Injected instructions found in notes/pay stubs, shown as ignored, with the unchanged result |
-| Right panel | Coverage Coach chat: EN/ES/PT/HT, plain language, suggested questions, agent trace, read-aloud |
+| Coverage Coach | Floating button bottom-right; opens a chat panel on the right: EN/ES/PT/HT, plain language, suggested questions, agent trace, read-aloud (`coach_widget.py` + `agent_panel.py`) |
 
 ## Code map
 `main.py` (layout) · `state.py` (pipeline per member) · `data.py` (fixtures) · `offline.py` (replay LLM) ·

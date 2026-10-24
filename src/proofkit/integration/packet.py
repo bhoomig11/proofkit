@@ -11,7 +11,7 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from proofkit.contracts import FindingsBundle, Member, ProofKitStatus
 
-DISCLAIMER = "ProofKit organizes evidence. MassHealth makes all eligibility determinations."
+DISCLAIMER = "RenewRight organizes evidence. MassHealth makes all eligibility determinations."
 SIGN_OFF = "This statement must be reviewed and signed by a licensed clinician."
 STATUS_TEXT = {"protected": "Protected", "at_risk": "At risk", "needs_review": "Needs review"}
 STYLE = """
@@ -45,8 +45,8 @@ def build_packet_html(member: Member, status: ProofKitStatus, findings: Findings
     """Member + ProofKitStatus + FindingsBundle -> standalone, escaped HTML proof packet."""
     parts: list[str] = [
         "<!doctype html><html lang='en'><head><meta charset='utf-8'>",
-        f"<title>ProofKit evidence packet: {_e(member.member_id)}</title><style>{STYLE}</style></head><body>",
-        "<h1>ProofKit evidence packet</h1>",
+        f"<title>RenewRight evidence packet: {_e(member.member_id)}</title><style>{STYLE}</style></head><body>",
+        "<h1>RenewRight evidence packet</h1>",
         f"<p class='muted'>Member: {_e(member.display_name)} ({_e(member.member_id)}) · "
         f"Renewal: {_e(_day(member.renewal_date))}</p>",
         f"<p><span class='badge'>{_e(STATUS_TEXT.get(status.status.value, status.status.value))}</span>",
