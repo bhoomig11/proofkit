@@ -393,3 +393,63 @@ def test_sample_queue_dedupes_and_caps():
     for i in range(5):
         small = queue_sample(small, f"s{i}.csv", bytes([i]), cap=3)
     assert len(small) == 3
+
+
+# ─────────────────────────── live AI only behind an explicit button (product decision, Karthik) ───────────────────
+LIVE_AI_BUTTON = "Process with live AI"
+
+
+def _render_upload_def() -> ast.FunctionDef:
+    for node in ast.walk(_tree("upload.py")):
+        if isinstance(node, ast.FunctionDef) and node.name == "render_upload":
+            return node
+    raise AssertionError("render_upload not found in app/upload.py")
+
+
+def _is_live_button_call(node: ast.AST) -> bool:
+    return (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "button"
+            and bool(node.args) and isinstance(node.args[0], ast.Constant) and node.args[0].value == LIVE_AI_BUTTON)
+
+
+def _may_request_live(call: ast.Call) -> bool:
+    """upload_llm(...) call -> True unless its opt-in is provably falsy (a falsy constant, or no argument)."""
+    if call.args:
+        arg = call.args[0]
+    else:
+        kw = [k for k in call.keywords if k.arg == "live_opt_in"]
+        if not kw:
+            return False
+        arg = kw[0].value
+    return not (isinstance(arg, ast.Constant) and not arg.value)
+
+
+def _call_label(call: ast.Call) -> str | None:
+    if call.args and isinstance(call.args[0], ast.Constant) and isinstance(call.args[0].value, str):
+        return call.args[0].value
+    for k in call.keywords:
+        if k.arg == "label" and isinstance(k.value, ast.Constant) and isinstance(k.value.value, str):
+            return k.value.value
+    return None
+
+
+def test_live_ai_only_inside_process_button():
+    fn = _render_upload_def()
+
+    button_ifs = [n for n in ast.walk(fn) if isinstance(n, ast.If) and _is_live_button_call(n.test)]
+    assert button_ifs, f'render_upload needs `if st.button("{LIVE_AI_BUTTON}", ...):`'
+
+    guarded: set[int] = set()
+    for if_node in button_ifs:
+        for stmt in if_node.body:
+            guarded.update(id(n) for n in ast.walk(stmt))
+
+    live_calls = [n for n in ast.walk(fn) if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+                  and n.func.id == "upload_llm" and _may_request_live(n)]
+    for call in live_calls:
+        assert id(call) in guarded, \
+            f'upload_llm(...) at line {call.lineno} may go live outside the "{LIVE_AI_BUTTON}" button body'
+
+    for node in ast.walk(fn):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "checkbox":
+            label = (_call_label(node) or "").lower()
+            assert "live ai" not in label, f"line {node.lineno}: a checkbox must not opt in to live AI"
