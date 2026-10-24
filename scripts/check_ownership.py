@@ -18,7 +18,7 @@ OWNED = {
 }
 FROZEN = ["src/proofkit/contracts/*", "src/proofkit/common/*", "contracts/*", "tests/contract/*",
           "tests/conftest.py", "docs/02_CONTRACTS.md"]
-ANYONE = ["docs/roles/*", "*/HANDOFF.md", "README.md", "setup/TRACKER.md"]
+ANYONE = ["docs/roles/*", "*/HANDOFF.md", "README.md", "setup/TRACKER.md", ".kiro/specs/*"]
 
 
 def git(*args: str) -> str:

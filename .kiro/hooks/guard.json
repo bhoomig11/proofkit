@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "guard-tools",
+      "trigger": "PreToolUse",
+      "action": {
+        "type": "command",
+        "command": "python .kiro/hooks/guard_tools.py"
+      },
+      "timeout": 15
+    }
+  ]
+}

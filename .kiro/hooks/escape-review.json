@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "escape-review-packet-reminder",
+      "trigger": "PostFileSave",
+      "matcher": "src[\\/]proofkit[\\/]integration[\\/](packet|reminder)\\.py$",
+      "action": {
+        "type": "agent",
+        "prompt": "Review only the file that was just saved (src/proofkit/integration/packet.py or src/proofkit/integration/reminder.py). Check exactly three things: (1) any note text, document text, quote, source_quote, platform, condition, statement or name that can reach HTML without passing through html.escape, including unsafe_allow_html with user content; (2) SMS reminder text that can exceed 160 characters or contain non-ASCII or non-printable characters, including when the first name is long or non-ASCII; (3) PHI beyond the member's first name in the SMS (last name, member_id, phone digits, conditions, ICD-10 codes, exemption type, program names, note or document text); the income shortfall amount and the due date are allowed by design. Report each finding as 'line N: problem; suggested fix'. If a check has no findings, write 'none' for it. Do not edit any file and do not run any command."
+      }
+    }
+  ]
+}
