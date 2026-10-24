@@ -102,8 +102,10 @@ def answer_html(text: str, lang: str | None = None, announce: bool = False) -> s
     block has no blank lines (a blank line would end the HTML block and let markdown run again).
     `lang` tells screen readers which language to read; `announce` marks the newest answer as a live region.
     """
-    safe = escape_plain(text.replace("\r\n", "\n").replace("\r", "\n"))
-    safe = "".join(_MARKDOWN_ENTITIES.get(c, c) for c in safe).replace("\n", "<br>")
+    # One pass, one escape per character: escaping HTML first and then markdown would re-escape the '#'
+    # inside entities like &#x27; and show the raw code instead of an apostrophe.
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    safe = "".join(_MARKDOWN_ENTITIES.get(c) or escape_plain(c) for c in text).replace("\n", "<br>")
     attrs = (f" lang='{lang}'" if lang in LANGUAGE_OPTIONS.values() else "") \
         + (" role='status' aria-live='polite'" if announce else "")
     return f"<div class='pk-answer'{attrs} style='white-space:normal;overflow-wrap:anywhere'>{safe}</div>"

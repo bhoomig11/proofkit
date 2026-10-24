@@ -104,3 +104,10 @@ def open_coach(member_id="SYN-0004"):
     at.run()
     at.button(key="coach_open_btn").click().run()
     return at
+
+
+def test_apostrophes_quotes_and_ampersands_are_escaped_exactly_once():
+    out = answer_html("Hi, I'm Coverage Coach. I can tell you whether you're covered & \"why\" #1.")
+    assert "&#35;x27;" not in out and "&amp;#" not in out   # an entity must never be re-escaped
+    assert out.count("&#x27;") == 2                         # I'm, you're
+    assert "&amp;" in out and "&quot;why&quot;" in out and "&#35;1" in out
