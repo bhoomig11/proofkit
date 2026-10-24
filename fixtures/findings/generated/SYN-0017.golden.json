@@ -1,0 +1,34 @@
+{
+  "member_id": "SYN-0017",
+  "notes_processed": [
+    "N-0017-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0017-a-0",
+      "note_id": "N-0017-a",
+      "note_date": "2026-04-14",
+      "condition": "Schizophrenia",
+      "icd10": "F20.9",
+      "status": "family_history",
+      "quote": "Sister with schizophrenia",
+      "quote_start": 502,
+      "quote_end": 527,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0017-a-1",
+      "note_id": "N-0017-a",
+      "note_date": "2026-04-14",
+      "condition": "Cerebral palsy",
+      "icd10": "G80.9",
+      "status": "current",
+      "quote": "Cerebral palsy",
+      "quote_start": 1152,
+      "quote_end": 1166,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

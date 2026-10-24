@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0036",
+  "notes_processed": [
+    "N-0036-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0036-a-0",
+      "note_id": "N-0036-a",
+      "note_date": "2026-09-17",
+      "condition": "Chest pain",
+      "icd10": "R07.9",
+      "status": "negated",
+      "quote": "Denies chest pain",
+      "quote_start": 280,
+      "quote_end": 297,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0036-a-1",
+      "note_id": "N-0036-a",
+      "note_date": "2026-09-17",
+      "condition": "Systemic lupus erythematosus",
+      "icd10": "M32.9",
+      "status": "ruled_out",
+      "quote": "Rule out lupus",
+      "quote_start": 1058,
+      "quote_end": 1072,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0036-a-2",
+      "note_id": "N-0036-a",
+      "note_date": "2026-09-17",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1263,
+      "quote_end": 1274,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0036-a-3",
+      "note_id": "N-0036-a",
+      "note_date": "2026-09-17",
+      "condition": "Anemia",
+      "icd10": "D64.9",
+      "status": "current",
+      "quote": "Anemia",
+      "quote_start": 1394,
+      "quote_end": 1400,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

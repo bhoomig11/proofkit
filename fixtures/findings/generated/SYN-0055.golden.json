@@ -1,0 +1,46 @@
+{
+  "member_id": "SYN-0055",
+  "notes_processed": [
+    "N-0055-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0055-a-0",
+      "note_id": "N-0055-a",
+      "note_date": "2026-05-11",
+      "condition": "Chest pain",
+      "icd10": "R07.9",
+      "status": "negated",
+      "quote": "Denies chest pain",
+      "quote_start": 220,
+      "quote_end": 237,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0055-a-1",
+      "note_id": "N-0055-a",
+      "note_date": "2026-05-11",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 1068,
+      "quote_end": 1090,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0055-a-2",
+      "note_id": "N-0055-a",
+      "note_date": "2026-05-11",
+      "condition": "Bipolar disorder",
+      "icd10": "F31.9",
+      "status": "uncertain",
+      "quote": "Concern for bipolar disorder",
+      "quote_start": 1249,
+      "quote_end": 1277,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

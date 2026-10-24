@@ -1,0 +1,46 @@
+{
+  "member_id": "SYN-0049",
+  "notes_processed": [
+    "N-0049-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0049-a-0",
+      "note_id": "N-0049-a",
+      "note_date": "2026-08-29",
+      "condition": "Rheumatoid arthritis",
+      "icd10": "M06.9",
+      "status": "family_history",
+      "quote": "Mother with rheumatoid arthritis",
+      "quote_start": 361,
+      "quote_end": 393,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0049-a-1",
+      "note_id": "N-0049-a",
+      "note_date": "2026-08-29",
+      "condition": "Chronic kidney disease, stage 3",
+      "icd10": "N18.30",
+      "status": "current",
+      "quote": "Chronic kidney disease stage 3",
+      "quote_start": 1055,
+      "quote_end": 1085,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0049-a-2",
+      "note_id": "N-0049-a",
+      "note_date": "2026-08-29",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1254,
+      "quote_end": 1265,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

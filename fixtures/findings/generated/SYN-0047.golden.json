@@ -1,0 +1,46 @@
+{
+  "member_id": "SYN-0047",
+  "notes_processed": [
+    "N-0047-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0047-a-0",
+      "note_id": "N-0047-a",
+      "note_date": "2026-10-07",
+      "condition": "Malignant neoplasm of breast",
+      "icd10": "C50.919",
+      "status": "family_history",
+      "quote": "Mother with breast cancer",
+      "quote_start": 320,
+      "quote_end": 345,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0047-a-1",
+      "note_id": "N-0047-a",
+      "note_date": "2026-10-07",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "family_history",
+      "quote": "Father with heart failure",
+      "quote_start": 347,
+      "quote_end": 372,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0047-a-2",
+      "note_id": "N-0047-a",
+      "note_date": "2026-10-07",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 1020,
+      "quote_end": 1042,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

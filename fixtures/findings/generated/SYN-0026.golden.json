@@ -1,0 +1,82 @@
+{
+  "member_id": "SYN-0026",
+  "notes_processed": [
+    "N-0026-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0026-a-0",
+      "note_id": "N-0026-a",
+      "note_date": "2026-07-27",
+      "condition": "Chest pain",
+      "icd10": "R07.9",
+      "status": "negated",
+      "quote": "Denies chest pain",
+      "quote_start": 282,
+      "quote_end": 299,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0026-a-1",
+      "note_id": "N-0026-a",
+      "note_date": "2026-07-27",
+      "condition": "Mild intermittent asthma",
+      "icd10": "J45.20",
+      "status": "uncertain",
+      "quote": "Possible mild intermittent asthma",
+      "quote_start": 1200,
+      "quote_end": 1233,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0026-a-2",
+      "note_id": "N-0026-a",
+      "note_date": "2026-07-27",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1377,
+      "quote_end": 1388,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0026-a-3",
+      "note_id": "N-0026-a",
+      "note_date": "2026-07-27",
+      "condition": "Anemia",
+      "icd10": "D64.9",
+      "status": "current",
+      "quote": "Anemia",
+      "quote_start": 1520,
+      "quote_end": 1526,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0026-a-4",
+      "note_id": "N-0026-a",
+      "note_date": "2026-07-27",
+      "condition": "Bipolar disorder",
+      "icd10": "F31.9",
+      "status": "uncertain",
+      "quote": "Concern for bipolar disorder",
+      "quote_start": 1610,
+      "quote_end": 1638,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0026-a-5",
+      "note_id": "N-0026-a",
+      "note_date": "2026-07-27",
+      "condition": "Malignant neoplasm of colon",
+      "icd10": "C18.9",
+      "status": "historical",
+      "quote": "History of colon cancer, s/p resection in 2022",
+      "quote_start": 1734,
+      "quote_end": 1780,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

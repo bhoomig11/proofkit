@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0038",
+  "notes_processed": [
+    "N-0038-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0038-a-0",
+      "note_id": "N-0038-a",
+      "note_date": "2026-07-09",
+      "condition": "Rheumatoid arthritis",
+      "icd10": "M06.9",
+      "status": "family_history",
+      "quote": "Mother with rheumatoid arthritis",
+      "quote_start": 518,
+      "quote_end": 550,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0038-a-1",
+      "note_id": "N-0038-a",
+      "note_date": "2026-07-09",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 1071,
+      "quote_end": 1093,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0038-a-2",
+      "note_id": "N-0038-a",
+      "note_date": "2026-07-09",
+      "condition": "Bipolar disorder",
+      "icd10": "F31.9",
+      "status": "uncertain",
+      "quote": "Concern for bipolar disorder",
+      "quote_start": 1252,
+      "quote_end": 1280,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0038-a-3",
+      "note_id": "N-0038-a",
+      "note_date": "2026-07-09",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1421,
+      "quote_end": 1432,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

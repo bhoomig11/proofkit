@@ -1,0 +1,46 @@
+{
+  "member_id": "SYN-0053",
+  "notes_processed": [
+    "N-0053-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0053-a-0",
+      "note_id": "N-0053-a",
+      "note_date": "2026-06-06",
+      "condition": "Chest pain",
+      "icd10": "R07.9",
+      "status": "negated",
+      "quote": "Denies chest pain",
+      "quote_start": 251,
+      "quote_end": 268,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0053-a-1",
+      "note_id": "N-0053-a",
+      "note_date": "2026-06-06",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 1012,
+      "quote_end": 1034,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0053-a-2",
+      "note_id": "N-0053-a",
+      "note_date": "2026-06-06",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1193,
+      "quote_end": 1204,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}
