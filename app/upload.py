@@ -21,8 +21,9 @@ UPLOAD_TYPES = ("csv", "txt", "pdf", "png", "jpg", "jpeg")
 UPLOAD_QUEUE_KEY = "ui_extras_upload_queue"
 IMAGE_NOTE = ("Image received. We don't read images yet, so this month is flagged for a navigator "
               "to review.")
-LIVE_AI_NOTE = ("A live AI key is needed to read free-text and PDF statements. In this offline demo we only "
-                "process CSV files and images.")
+LIVE_AI_NOTE = "Reading text and PDF files needs the live AI, which sends the file text to the AI provider."
+NO_LIVE_KEY_NOTE = ("No live AI key is configured, so text and PDF files can't be read here. Upload a CSV export "
+                    "of the same statement instead.")
 _MAX_FILENAME = 255
 _EXT_TYPES = {
     "csv": DocumentType.CSV,
@@ -145,8 +146,6 @@ def render_upload(member: Member, rules: WalletRules, today: date) -> None:
     import streamlit as st
 
     st.subheader("Upload a pay statement")
-    live_opt_in = st.checkbox("Use live AI to read text and PDF files (sends the text to the AI provider)",
-                              value=False, key=f"ui_extras_live_ai_{member.member_id}")
     files = st.file_uploader("Pay statements", type=list(UPLOAD_TYPES), accept_multiple_files=True,
                              key=f"ui_extras_uploader_{member.member_id}") or []
     pending: list[tuple[str, bytes]] = [(f.name, f.getvalue()) for f in files]
@@ -168,15 +167,30 @@ def render_upload(member: Member, rules: WalletRules, today: date) -> None:
     if not docs:
         return
 
-    llm, mode = upload_llm(live_opt_in)
-    if mode == "offline-demo" and needs_live_ai(docs):
-        st.info(LIVE_AI_NOTE)
-        docs = [d for d in docs if d.doc_type not in _LIVE_AI_TYPES]
-        if not docs:
-            return
-    if any(d.doc_type == DocumentType.IMAGE for d in docs):
-        st.info(IMAGE_NOTE)
+    # CSV and images never need the AI: process them offline right away.
+    offline_docs = [d for d in docs if d.doc_type not in _LIVE_AI_TYPES]
+    live_docs = [d for d in docs if d.doc_type in _LIVE_AI_TYPES]
+    if offline_docs:
+        if any(d.doc_type == DocumentType.IMAGE for d in offline_docs):
+            st.info(IMAGE_NOTE)
+        offline_llm, _ = upload_llm(False)
+        _show_results(st, member, offline_docs, offline_llm, rules, today)
 
+    if not live_docs:
+        return
+    # Text and PDF files go to the AI provider only after an explicit click.
+    st.info(LIVE_AI_NOTE)
+    if st.button("Process with live AI", key=f"ui_extras_live_ai_{member.member_id}"):
+        live_llm, mode = upload_llm(True)
+        if mode == "offline-demo":
+            st.warning(NO_LIVE_KEY_NOTE)
+            return
+        _show_results(st, member, live_docs, live_llm, rules, today)
+
+
+def _show_results(st, member: Member, docs: list[EarningsDocument], llm: LLMClient, rules: WalletRules,
+                  today: date) -> None:
+    """Streamlit: run upload_results for one batch and show the month table or a fixed friendly message."""
     wallet, error = upload_results(member, docs, llm, rules, today)
     if error is not None:
         st.error(error)
