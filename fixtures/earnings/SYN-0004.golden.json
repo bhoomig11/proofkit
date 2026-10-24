@@ -1,9 +1,9 @@
 [
   {
-    "record_id": "R-D-0004-tr-feb-0",
+    "record_id": "R-D-0004-eh-feb-0",
     "member_id": "SYN-0004",
-    "source_doc_id": "D-0004-tr-feb",
-    "platform": "taskrabbit",
+    "source_doc_id": "D-0004-eh-feb",
+    "platform": "errandhive",
     "period_start": "2027-02-01",
     "period_end": "2027-02-28",
     "hours": "18.00",
@@ -12,10 +12,10 @@
     "confidence": 0.95
   },
   {
-    "record_id": "R-D-0004-uw-feb-0",
+    "record_id": "R-D-0004-fy-feb-0",
     "member_id": "SYN-0004",
-    "source_doc_id": "D-0004-uw-feb",
-    "platform": "upwork",
+    "source_doc_id": "D-0004-fy-feb",
+    "platform": "freelanceyard",
     "period_start": "2027-02-01",
     "period_end": "2027-02-28",
     "hours": null,

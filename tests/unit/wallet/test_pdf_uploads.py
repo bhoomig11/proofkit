@@ -15,8 +15,8 @@ from proofkit.wallet import build_wallet, load_wallet_rules, parse_documents
 from tests.unit.wallet.test_parse import b64_doc, pdf_rules, rules  # noqa: F401  (pytest fixtures)
 
 ROOT = Path(__file__).resolve().parents[3]
-PDF_FIXTURE = ROOT / "fixtures" / "wallet" / "D-0002-uber-feb-pdf.json"
-TEXT_DOC_ID = "D-0002-uber-feb"
+PDF_FIXTURE = ROOT / "fixtures" / "wallet" / "D-0002-ridenow-feb-pdf.json"
+TEXT_DOC_ID = "D-0002-ridenow-feb"
 MONTH = "2027-02"
 
 
@@ -40,8 +40,8 @@ def _summary(wallet, month):
     return m.total_hours, m.total_income, m.qualifies, m.basis.value, m.needs_review
 
 
-def test_pdf_version_of_uber_fixture_gives_same_month_as_text(members, earnings_docs_by_member, golden_records,
-                                                              expected_wallet, wallet_rules_path, demo_today):
+def test_pdf_version_of_ridenow_fixture_gives_same_month_as_text(members, earnings_docs_by_member, golden_records,
+                                                                 expected_wallet, wallet_rules_path, demo_today):
     shipped = load_wallet_rules(wallet_rules_path)
     pdf_doc = EarningsDocument.model_validate(json.loads(PDF_FIXTURE.read_text()))
     (text_doc,) = [d for d in earnings_docs_by_member["SYN-0002"] if d.doc_id == TEXT_DOC_ID]

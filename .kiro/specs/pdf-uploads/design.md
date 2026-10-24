@@ -25,7 +25,7 @@
 |---|---|---|
 | P1 Config gate: shipped rules allow pdf | R1.1 | `test_shipped_rules_allow_pdf_uploads` |
 | P2 Version gate: pdf stays off on old pypdf | R1.2 | `test_pdf_uploads_off_while_pinned_pypdf_has_known_cves` |
-| P3 Format parity: PDF and text give the same month | R2.1, R2.2 | `test_pdf_version_of_uber_fixture_gives_same_month_as_text` |
+| P3 Format parity: PDF and text give the same month | R2.1, R2.2 | `test_pdf_version_of_ridenow_fixture_gives_same_month_as_text` |
 | P4 Bomb rejection: ValueError naming doc_id, no LLM call | R3.1, R3.2, R3.4 | `test_decompression_bomb_pdf_is_rejected` |
 | P5 Limits kept for PDFs | R3.3 | `test_bad_uploads_rejected`, `test_size_limit_applies_to_valid_content` |
 | P6 Month containment | R4.1 | `test_every_piece_lies_inside_one_calendar_month` |

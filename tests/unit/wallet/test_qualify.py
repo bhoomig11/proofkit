@@ -13,7 +13,7 @@ def rules(wallet_rules_path):
 
 
 def rec(start, end, hours="3", income="30.00", rid="r1"):
-    return EarningsRecord(record_id=rid, member_id="SYN-0001", source_doc_id="d1", platform="doordash",
+    return EarningsRecord(record_id=rid, member_id="SYN-0001", source_doc_id="d1", platform="quickdash",
                           period_start=start, period_end=end, hours=D(hours), gross_income=D(income),
                           source_quote="q", confidence=0.95)
 
@@ -30,7 +30,7 @@ def test_february_proration_respects_leap_years(rules, start, end, feb, mar):
 
 
 def dup(rid, doc, conf=0.95):
-    return EarningsRecord(record_id=rid, member_id="SYN-0001", source_doc_id=doc, platform="doordash",
+    return EarningsRecord(record_id=rid, member_id="SYN-0001", source_doc_id=doc, platform="quickdash",
                           period_start=date(2027, 2, 1), period_end=date(2027, 2, 7), hours=D("10"),
                           gross_income=D("100.00"), source_quote="q", confidence=conf)
 
@@ -43,7 +43,7 @@ def test_dedupe_only_across_docs_and_after_confidence_filter(rules, records, hou
     assert evaluate_months(records, rules)[0].total_hours == D(hours)
 
 
-def stmt(rid, doc, start, end, hours, platform="doordash"):
+def stmt(rid, doc, start, end, hours, platform="quickdash"):
     return EarningsRecord(record_id=rid, member_id="SYN-0001", source_doc_id=doc, platform=platform,
                           period_start=start, period_end=end, hours=D(hours), gross_income=D(hours) * 10,
                           source_quote="q", confidence=0.95)
@@ -59,7 +59,7 @@ def test_overlapping_statements_from_different_docs_are_not_double_counted(rules
 
 @pytest.mark.parametrize("records", [
     [stmt("a", "d1", date(2027, 2, 1), date(2027, 2, 28), "40"),
-     stmt("b", "d2", date(2027, 2, 1), date(2027, 2, 28), "40", platform="uber")],  # two platforms at once is normal
+     stmt("b", "d2", date(2027, 2, 1), date(2027, 2, 28), "40", platform="ridenow")],  # two platforms at once is normal
     [stmt("a", "d1", date(2027, 2, 1), date(2027, 2, 14), "40"),
      stmt("b", "d2", date(2027, 2, 15), date(2027, 2, 28), "40")],                  # back to back, no overlap
 ])

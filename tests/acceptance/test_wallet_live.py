@@ -58,10 +58,10 @@ def rules(wallet_rules_path):
 
 
 @pytest.mark.live
-def test_uber_statement_with_real_llm(llm, rules, members, earnings_docs_by_member, demo_today):
-    (doc,) = [d for d in earnings_docs_by_member["SYN-0002"] if d.doc_id == "D-0002-uber-feb"]
+def test_ridenow_statement_with_real_llm(llm, rules, members, earnings_docs_by_member, demo_today):
+    (doc,) = [d for d in earnings_docs_by_member["SYN-0002"] if d.doc_id == "D-0002-ridenow-feb"]
     w = build_wallet(members["SYN-0002"], [doc], llm, rules, demo_today)
-    assert w.records and all(r.platform == "uber" for r in w.records)
+    assert w.records and all(r.platform == "ridenow" for r in w.records)
     m = {m.month: m for m in w.months}["2027-02"]
     assert m.total_hours == Decimal("92.50") and m.total_income in {Decimal("1480.00"), Decimal("1592.00")}
 
