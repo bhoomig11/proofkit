@@ -7,18 +7,20 @@ least as conservative as the deterministic backstop. Anything else is dropped an
 """
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from pydantic import ValidationError
 
-from proofkit.common.injection import injection_spans, overlaps_injection
+from proofkit.common.injection import injection_spans, looks_like_injection, overlaps_injection
 from proofkit.common.llm import LLMClient, LLMError
 from proofkit.common.redact import get_logger
 from proofkit.contracts import ClinicalNote, Finding, FindingsBundle, FindingStatus
+from proofkit.extraction.consistency import code_supported
 from proofkit.extraction.ground import ground_quote
 from proofkit.extraction.normalize import normalize_icd10
 from proofkit.extraction.prompts import EXTRACTION_INSTRUCTIONS
-from proofkit.extraction.status import apply_backstop
+from proofkit.extraction.status import apply_backstop, sentence_bounds
 
 EXTRACTOR_VERSION = "p1a-0.1.0"
 
@@ -41,9 +43,17 @@ def _call_llm(llm: LLMClient, note: ClinicalNote) -> list | None:
             if not isinstance(response, dict) or not isinstance(response.get("findings"), list):
                 raise LLMError('response is not {"findings": [...]}')
             return response["findings"]
-        except LLMError:
-            log.warning("extract_findings failed note_id=%s attempt=%d", note.note_id, attempt)
+        except Exception as exc:  # any client failure (LLMError, timeout, API error) is a failed attempt
+            log.warning("extract_findings failed note_id=%s attempt=%d error=%s",
+                        note.note_id, attempt, type(exc).__name__)
     return None
+
+
+def _clean_condition(raw: Any) -> str | None:
+    """Plain, single-line, non-instruction text with tidy spacing, or None."""
+    if not isinstance(raw, str) or re.search(r"[\x00-\x1f<>]", raw) or looks_like_injection(raw):
+        return None
+    return " ".join(raw.split()) or None
 
 
 def _verify(note: ClinicalNote, raw: Any, tainted: list[tuple[int, int]]) -> Finding | None:
@@ -51,14 +61,21 @@ def _verify(note: ClinicalNote, raw: Any, tainted: list[tuple[int, int]]) -> Fin
     if not isinstance(raw, dict):
         return None
     icd10 = normalize_icd10(raw.get("icd10"))
+    condition = _clean_condition(raw.get("condition"))
+    confidence = raw.get("confidence")
+    if icd10 is None or condition is None or isinstance(confidence, bool) or not isinstance(confidence, (int, float)):
+        return None
     span = ground_quote(note.text, raw.get("quote"), raw.get("quote_start"))
-    if icd10 is None or span is None or overlaps_injection(span.start, span.end, tainted):
+    if span is None or overlaps_injection(span.start, span.end, tainted):
         return None
     try:
         status = apply_backstop(FindingStatus(raw.get("status")), note.text, span.start, span.end)
+        s0, s1 = sentence_bounds(note.text, span.start, span.end)
+        if status == FindingStatus.CURRENT and not code_supported(icd10, note.text[s0:s1]):
+            status = FindingStatus.UNCERTAIN  # qualifying code not backed by its quote: clinician review
         return Finding(finding_id=_PENDING_ID, note_id=note.note_id, note_date=note.note_date,
-                       condition=raw.get("condition"), icd10=icd10, status=status, quote=span.text,
-                       quote_start=span.start, quote_end=span.end, confidence=raw.get("confidence"))
+                       condition=condition, icd10=icd10, status=status, quote=span.text,
+                       quote_start=span.start, quote_end=span.end, confidence=confidence)
     except (ValueError, ValidationError):
         return None
 

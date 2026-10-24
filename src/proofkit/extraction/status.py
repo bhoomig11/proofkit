@@ -43,7 +43,8 @@ _PRIORITY = [FindingStatus.NEGATED, FindingStatus.RULED_OUT, FindingStatus.FAMIL
              FindingStatus.HISTORICAL, FindingStatus.UNCERTAIN]
 
 
-def _sentence_bounds(text: str, start: int, end: int) -> tuple[int, int]:
+def sentence_bounds(text: str, start: int, end: int) -> tuple[int, int]:
+    """(start, end) of the sentence containing text[start:end]."""
     s0 = 0
     for m in _SENTENCE_END.finditer(text, 0, start):
         s0 = m.end()
@@ -53,7 +54,7 @@ def _sentence_bounds(text: str, start: int, end: int) -> tuple[int, int]:
 
 def detect_status(text: str, start: int, end: int) -> FindingStatus | None:
     """Return the status implied by cues around text[start:end] in its sentence, or None if no cue."""
-    s0, s1 = _sentence_bounds(text, start, end)
+    s0, s1 = sentence_bounds(text, start, end)
     before = text[s0:start]
     cut = [m.end() for m in _TERMINATOR.finditer(before)]
     if cut:
