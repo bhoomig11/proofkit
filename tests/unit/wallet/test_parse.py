@@ -41,7 +41,6 @@ def test_csv_aliases_ids_and_quotes(rules):
 @pytest.mark.parametrize("row", [
     "doordash,02/01/2027,2027-02-07,10,100.00",   # non-ISO date
     "doordash,2027-02-07,2027-02-01,10,100.00",   # end before start
-    "doordash,2027-01-01,2027-03-01,10,100.00",   # longer than 31 days
     "doordash,2027-02-01,2027-02-07,10,abc",      # income not money
     "doordash,2027-02-01,2027-02-07,10,-25.00",   # negative adjustment is not earnings
     "doordash,2027-02-01,2027-02-07,-4,100.00",   # negative hours
@@ -266,3 +265,30 @@ def test_brand_plus_product_name_maps_to_known_platform(rules, given, want):
     (r,) = parse_documents([csv_doc(text)], "SYN-0001", FakeLLM({}), rules=rules)
     assert r.platform == want
     assert (r.confidence >= rules.min_record_confidence) is (want in rules.known_platforms)
+
+
+@pytest.mark.parametrize("hours, income", [("59", "590.00"), ("7", "10.00"), (None, "0.01"), ("1", "999.99")])
+def test_csv_row_longer_than_31_days_is_split_by_month(rules, hours, income):
+    row = f"doordash,2027-01-15,2027-03-14,{hours or ''},{income}"  # 17 days Jan, 28 Feb, 14 Mar
+    recs = parse_documents([csv_doc(f"platform,period_start,period_end,hours,gross_pay\n{row}\n")], "SYN-0001",
+                           FakeLLM({}), rules=rules)
+    assert [(r.record_id, r.period_start, r.period_end) for r in recs] == [
+        ("R-c1-0", date(2027, 1, 15), date(2027, 1, 31)),
+        ("R-c1-1", date(2027, 2, 1), date(2027, 2, 28)),
+        ("R-c1-2", date(2027, 3, 1), date(2027, 3, 14))]
+    assert sum(r.gross_income for r in recs) == D(income)          # pieces add up to the source, to the cent
+    assert all(r.source_quote == row for r in recs)
+    if hours:
+        assert sum(r.hours for r in recs) == D(hours)
+    if income == "590.00":
+        assert [r.gross_income for r in recs] == [D("170.00"), D("280.00"), D("140.00")]
+
+
+def test_llm_record_longer_than_31_days_is_split_by_month(rules):
+    text = "Upwork quarterly summary\nPeriod: 01/01/2027 - 03/31/2027\nEarnings: $900.00\n"
+    llm = llm_one(platform="upwork", period_start="2027-01-01", period_end="2027-03-31", hours=None,
+                  gross_income="900.00", source_quote="Earnings: $900.00")
+    doc = EarningsDocument(doc_id="t1", member_id="SYN-0001", filename="u.txt", doc_type="text", content_text=text)
+    recs = parse_documents([doc], "SYN-0001", llm, rules=rules)
+    assert [r.gross_income for r in recs] == [D("310.00"), D("280.00"), D("310.00")]  # 31, 28, 31 of 90 days
+    assert all(r.confidence >= rules.min_record_confidence for r in recs)
