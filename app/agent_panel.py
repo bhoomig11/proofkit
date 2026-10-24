@@ -11,6 +11,8 @@ from proofkit.contracts import FindingsBundle, Member, ProofKitStatus
 from proofkit.integration import ask_coach
 from proofkit.wallet import WalletRules
 
+from app.highlight import escape_plain
+
 SUGGESTED_QUESTIONS = (
     "Am I covered?",
     "Why?",
@@ -70,6 +72,21 @@ class CoachBackend:
             used_fallback=reply.used_fallback,
             disclaimer=reply.disclaimer,
         )
+
+
+# Characters Streamlit's markdown would act on: links, emphasis, code, headings, tables, and $...$ formulas.
+_MARKDOWN_ENTITIES = {c: f"&#{ord(c)};" for c in "[]()*_`#|~$\\"}
+
+
+def answer_html(text: str) -> str:
+    """Wrap dynamic coach text in one wrapping block that renders as plain characters.
+
+    HTML is escaped, markdown and formula characters become entities, and line breaks become <br> so the
+    block has no blank lines (a blank line would end the HTML block and let markdown run again).
+    """
+    safe = escape_plain(text.replace("\r\n", "\n").replace("\r", "\n"))
+    safe = "".join(_MARKDOWN_ENTITIES.get(c, c) for c in safe).replace("\n", "<br>")
+    return f"<div class='pk-answer' style='white-space:normal;overflow-wrap:anywhere'>{safe}</div>"
 
 
 def _safe_json_string(value: str) -> str:
@@ -145,14 +162,14 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
 
 def _render_answer(result: ChatResult, language: str, components: Any, st: Any) -> None:
     """Render dynamic answer/facts as plain text and a transparent trace."""
-    st.text(result.answer)
+    st.markdown(answer_html(result.answer), unsafe_allow_html=True)
     with st.expander("Agent trace — how this answer was made"):
         st.text(f"Tool: {result.tool}")
         st.text("Arguments: validated inside the read-only coach")
         st.text(f"Fallback used: {'yes' if result.used_fallback else 'no'}")
         st.text("Verified facts:")
         for fact in result.facts:
-            st.text(f"• {fact}")
+            st.markdown(answer_html(f"• {fact}"), unsafe_allow_html=True)
     if language == "ht":
         st.caption("Read aloud is unavailable: this browser may not have a Haitian Creole voice.")
     else:
