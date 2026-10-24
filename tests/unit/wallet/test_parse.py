@@ -253,3 +253,16 @@ def test_pdf_uploads_off_while_pinned_pypdf_has_known_cves(rules):
     import pypdf
     if tuple(int(x) for x in pypdf.__version__.split(".")[:3]) < (6, 21, 2):
         assert "pdf" not in rules.allowed_doc_types
+
+
+@pytest.mark.parametrize("given, want", [
+    ("DoorDash Dasher", "doordash"),       # real model output on our DoorDash fixture
+    ("Uber Eats", "uber"),
+    ("amazon flex driver", "amazon_flex"),
+    ("doordasher", "doordasher"),          # only whole words match: stays unknown
+])
+def test_brand_plus_product_name_maps_to_known_platform(rules, given, want):
+    text = f"platform,period_start,period_end,hours,gross_pay\n{given},2027-02-01,2027-02-28,30,410.00\n"
+    (r,) = parse_documents([csv_doc(text)], "SYN-0001", FakeLLM({}), rules=rules)
+    assert r.platform == want
+    assert (r.confidence >= rules.min_record_confidence) is (want in rules.known_platforms)
