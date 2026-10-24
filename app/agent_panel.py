@@ -21,6 +21,8 @@ SUGGESTED_QUESTIONS = (
     "What should I do next?",
 )
 LANGUAGE_OPTIONS = {"EN": "en", "ES": "es", "PT": "pt", "HT": "ht"}
+PENDING_KEY = "coach_pending"  # a chip or typed question waiting to be answered on the next run
+INPUT_KEY = "coach_input"
 
 
 @dataclass(frozen=True)
@@ -120,54 +122,67 @@ def _safe_json_string(value: str) -> str:
 
 
 def _read_aloud_html(answer: str, language: str) -> str:
+    """A compact read-aloud control. Pressing it again while speaking stops the voice."""
     language_tags = {"en": "en-US", "es": "es-US", "pt": "pt-BR"}
     text = _safe_json_string(answer)
     tag = _safe_json_string(language_tags[language])
-    return f"""<!doctype html><html><body style="margin:0;background:transparent">
-<button id="speak" aria-label="Read this answer aloud" style="min-height:44px;padding:8px 12px">Read aloud</button>
+    return f"""<!doctype html><html><body style="margin:0;background:transparent;font-family:sans-serif">
+<button id="speak" aria-label="Read this answer aloud" aria-pressed="false"
+ style="min-height:44px;padding:4px 10px;border:0;background:transparent;color:#5032C8;
+ font-size:14px;font-weight:600;text-decoration:underline;cursor:pointer">&#128264; Read aloud</button>
 <script>
-const text={text}; const language={tag};
-document.getElementById('speak').addEventListener('click', () => {{
+const text={text}; const language={tag}; const button=document.getElementById('speak');
+function idle() {{ button.textContent='\\u{{1F508}} Read aloud'; button.setAttribute('aria-pressed','false');
+  button.setAttribute('aria-label','Read this answer aloud'); }}
+try {{ const accent = window.parent.getComputedStyle(window.parent.document.documentElement)
+  .getPropertyValue('--pk-accent').trim(); if (accent) button.style.color = accent; }} catch (e) {{}}
+button.addEventListener('click', () => {{
+  const speaking = button.getAttribute('aria-pressed') === 'true';
   window.speechSynthesis.cancel();
+  if (speaking) {{ idle(); return; }}
   const speech = new SpeechSynthesisUtterance(text); speech.lang = language;
+  speech.onend = idle; speech.onerror = idle;
+  button.textContent='\\u{{23F9}} Stop reading'; button.setAttribute('aria-pressed','true');
+  button.setAttribute('aria-label','Stop reading this answer');
   window.speechSynthesis.speak(speech);
 }});
 </script></body></html>"""
 
 
+def render_settings() -> None:
+    """Chat settings, shown behind the gear in the coach header. Values live in session state by key."""
+    import streamlit as st
+
+    st.selectbox("Answer language", tuple(LANGUAGE_OPTIONS), key="coach_language")
+    st.toggle("Plain language", key="coach_plain")
+    st.toggle("Show how the AI works", key="coach_show_tech",
+              help="Adds which read-only tool answered and whether live AI was used.")
+
+
 def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, today: date,
-                       backend: ChatBackend | None = None) -> None:
-    """Render the Streamlit coach; imported lazily so pure tests do not need Streamlit."""
+                       backend: ChatBackend | None = None, chat_height: int | None = None) -> None:
+    """Render the Streamlit coach; imported lazily so pure tests do not need Streamlit.
+
+    Settings are read from session state (the dock shows them behind its gear). `chat_height` puts the
+    messages in a scrolling list of that height so the input stays pinned under it.
+    """
     import streamlit as st
     import streamlit.components.v1 as components
 
     coach = backend or CoachBackend()
-    st.caption("Ask about your status, proof, or next step. The coach cannot change your result.")
-    language_label = st.selectbox("Answer language", tuple(LANGUAGE_OPTIONS), key="coach_language")
-    plain = st.toggle("Plain language", value=True, key="coach_plain")
-    show_tech = st.toggle("Show how the AI works", value=False, key="coach_show_tech",
-                          help="Adds which read-only tool answered and whether live AI was used.")
-    language = LANGUAGE_OPTIONS[language_label]
+    language = LANGUAGE_OPTIONS.get(st.session_state.get("coach_language", "EN"), "en")
+    plain = bool(st.session_state.get("coach_plain", True))
+    show_tech = bool(st.session_state.get("coach_show_tech", False))
 
     if "chat_messages" not in st.session_state:
         st.session_state.chat_messages = []
     if st.session_state.get("chat_member") != view.member.member_id:
         st.session_state.chat_messages = []
         st.session_state.chat_member = view.member.member_id
+        st.session_state.pop(PENDING_KEY, None)
 
-    suggested: str | None = None
-    for index, label in enumerate(SUGGESTED_QUESTIONS):
-        if st.button(label, key=f"suggested-{index}", use_container_width=True):
-            suggested = label
-
-    messages = st.session_state.chat_messages
-    for index, (question, result) in enumerate(messages):
-        with st.chat_message("user"):
-            st.markdown(answer_html(question), unsafe_allow_html=True)
-        with st.chat_message("assistant"):
-            _render_answer(result, language, components, st, show_tech, announce=index == len(messages) - 1)
-
-    question = suggested or st.chat_input("Ask Coverage Coach")
+    # Answer a chip or typed question before drawing, so the new message appears in this same run.
+    question = st.session_state.pop(PENDING_KEY, None)
     if question:
         context = CoachContext(
             member=view.member,
@@ -180,12 +195,41 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
             llm=llm,
         )
         try:
-            result = coach.ask(question, context)
+            st.session_state.chat_messages.append((question, coach.ask(question, context)))
         except ValueError as exc:
             st.error(str(exc))
-            return
-        st.session_state.chat_messages.append((question, result))
-        st.rerun()
+    messages = st.session_state.chat_messages
+
+    with st.container(height=chat_height, border=False, key="coach_messages"):
+        if not messages:
+            with st.chat_message("assistant"):
+                st.markdown(answer_html(
+                    f"Hi {view.member.display_name.split()[0]}! Ask about your status, proof, or next step. "
+                    "I can explain your result, but I cannot change it."), unsafe_allow_html=True)
+            with st.container(key="coach_suggestions"):
+                for index, label in enumerate(SUGGESTED_QUESTIONS):
+                    st.button(label, key=f"suggested-{index}", on_click=_queue, args=(label,))
+        for index, (asked, result) in enumerate(messages):
+            with st.chat_message("user"):
+                st.markdown(answer_html(asked), unsafe_allow_html=True)
+            with st.chat_message("assistant"):
+                _render_answer(result, language, components, st, show_tech, announce=index == len(messages) - 1)
+
+    st.chat_input("Write a message...", key=INPUT_KEY, on_submit=_queue_typed)
+
+
+def _queue(question: str) -> None:
+    import streamlit as st
+
+    st.session_state[PENDING_KEY] = question
+
+
+def _queue_typed() -> None:
+    import streamlit as st
+
+    typed = st.session_state.get(INPUT_KEY)
+    if typed:
+        st.session_state[PENDING_KEY] = typed
 
 
 def _render_answer(result: ChatResult, language: str, components: Any, st: Any, show_tech: bool = False,
@@ -210,4 +254,4 @@ def _render_answer(result: ChatResult, language: str, components: Any, st: Any, 
     if language == "ht":
         st.caption("Read aloud is unavailable: this browser may not have a Haitian Creole voice.")
     else:
-        components.html(_read_aloud_html(result.answer, language), height=54)
+        components.html(_read_aloud_html(result.answer, language), height=44)
