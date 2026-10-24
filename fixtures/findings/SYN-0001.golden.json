@@ -9,18 +9,6 @@
       "finding_id": "F-N-0001-a-0",
       "note_id": "N-0001-a",
       "note_date": "2026-11-10",
-      "condition": "Systemic lupus erythematosus with glomerular disease",
-      "icd10": "M32.14",
-      "status": "current",
-      "quote": "Systemic lupus erythematosus with lupus nephritis, active flare",
-      "quote_start": 167,
-      "quote_end": 230,
-      "confidence": 0.95
-    },
-    {
-      "finding_id": "F-N-0001-a-1",
-      "note_id": "N-0001-a",
-      "note_date": "2026-11-10",
       "condition": "Chest pain",
       "icd10": "R07.9",
       "status": "negated",
@@ -30,7 +18,7 @@
       "confidence": 0.9
     },
     {
-      "finding_id": "F-N-0001-a-2",
+      "finding_id": "F-N-0001-a-1",
       "note_id": "N-0001-a",
       "note_date": "2026-11-10",
       "condition": "Rheumatoid arthritis",
@@ -40,6 +28,18 @@
       "quote_start": 113,
       "quote_end": 145,
       "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0001-a-2",
+      "note_id": "N-0001-a",
+      "note_date": "2026-11-10",
+      "condition": "Systemic lupus erythematosus with glomerular disease",
+      "icd10": "M32.14",
+      "status": "current",
+      "quote": "Systemic lupus erythematosus with lupus nephritis, active flare",
+      "quote_start": 167,
+      "quote_end": 230,
+      "confidence": 0.95
     },
     {
       "finding_id": "F-N-0001-b-0",
