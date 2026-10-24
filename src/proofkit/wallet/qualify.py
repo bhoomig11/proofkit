@@ -41,21 +41,33 @@ def _split_by_month(r: EarningsRecord) -> list[tuple[str, _Slice]]:
 
 def evaluate_months(records: list[EarningsRecord], rules: WalletRules) -> list[MonthlyCompliance]:
     """EarningsRecord[] -> MonthlyCompliance[] sorted by month. Pure."""
-    by_month: dict[str, list[_Slice]] = {}
-    reasons: dict[str, list[str]] = {}
+    excluded: dict[str, str] = {}  # record_id -> why it doesn't count
+    kept: list[EarningsRecord] = []
     seen: dict[tuple, str] = {}  # (platform, period, hours, income) -> first source_doc_id
     for r in records:
-        low = r.confidence < rules.min_record_confidence
-        if not low:
-            key = (r.platform, r.period_start, r.period_end, r.hours, r.gross_income)
-            if seen.setdefault(key, r.source_doc_id) != r.source_doc_id:
-                continue  # same statement uploaded twice
+        if r.confidence < rules.min_record_confidence:
+            excluded[r.record_id] = f"confidence {r.confidence} below {rules.min_record_confidence}"
+            continue
+        key = (r.platform, r.period_start, r.period_end, r.hours, r.gross_income)
+        if seen.setdefault(key, r.source_doc_id) == r.source_doc_id:
+            kept.append(r)  # otherwise: same statement uploaded twice
+    # Same platform, overlapping days, different documents: we can't tell which statement is right, so neither
+    # counts until someone reviews it. ponytail: O(n^2) pairs, fine for a member's few dozen records.
+    for a in kept:
+        for b in kept:
+            if (a.platform == b.platform and a.source_doc_id != b.source_doc_id
+                    and a.period_start <= b.period_end and b.period_start <= a.period_end):
+                excluded[a.record_id] = f"overlaps {b.record_id} from another {a.platform} statement"
+
+    counted = {r.record_id for r in kept} - excluded.keys()
+    by_month: dict[str, list[_Slice]] = {}
+    reasons: dict[str, list[str]] = {}
+    for r in records:
         for month, s in _split_by_month(r):
             by_month.setdefault(month, [])
-            if low:
-                reasons.setdefault(month, []).append(
-                    f"record {r.record_id} excluded: confidence {r.confidence} below {rules.min_record_confidence}")
-            else:
+            if r.record_id in excluded:
+                reasons.setdefault(month, []).append(f"record {r.record_id} excluded: {excluded[r.record_id]}")
+            elif r.record_id in counted:
                 by_month[month].append(s)
 
     out = []
