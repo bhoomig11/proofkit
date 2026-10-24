@@ -8,7 +8,7 @@ from typing import Any, Protocol
 
 from proofkit.common.llm import LLMClient
 from proofkit.contracts import FindingsBundle, Member, ProofKitStatus
-from proofkit.integration import ask_coach
+from proofkit.integration import ask_coach, welcome_message
 from proofkit.wallet import WalletRules
 
 from app.format import format_money, month_long
@@ -205,9 +205,7 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
     with st.container(height=chat_height, border=False, key="coach_messages"):
         if not messages:
             with st.chat_message("assistant"):
-                st.markdown(answer_html(
-                    f"Hi {view.member.display_name.split()[0]}! Ask about your status, proof, or next step. "
-                    "I can explain your result, but I cannot change it."), unsafe_allow_html=True)
+                st.markdown(answer_html(welcome_message(view.member)), unsafe_allow_html=True)
             with st.container(key="coach_suggestions"):
                 for index, label in enumerate(SUGGESTED_QUESTIONS):
                     st.button(label, key=f"suggested-{index}", on_click=_queue, args=(label,))

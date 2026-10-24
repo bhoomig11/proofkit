@@ -3,7 +3,7 @@ answering everything with the status. Offline (no key) by default, like the host
 import pytest
 
 from proofkit.common.llm import FakeLLM
-from proofkit.integration import ask_coach
+from proofkit.integration import ask_coach, welcome_message
 from tests.integration.test_agent_panel import _context
 
 
@@ -75,3 +75,15 @@ def test_greeting_leaves_out_a_name_it_cannot_trust(display_name):
     member = c.member.model_copy(update={"display_name": display_name})
     reply = ask_coach("hi", member=member, status=c.status, llm=c.llm, wallet_rules=c.wallet_rules, today=c.today)
     assert reply.facts[0] == "Hi, I'm Coverage Coach."
+
+
+def test_opening_message_uses_the_first_name_when_known():
+    member = _context("SYN-0001", FakeLLM({})).member  # display name "Maria (synthetic)"
+    assert welcome_message(member) == ("Hi Maria! Ask about your status, proof, or next step. "
+                                       "I can explain your result, but I cannot change it.")
+
+
+@pytest.mark.parametrize("display_name", ["<script>x</script>", "12345", "(synthetic)", "   "])
+def test_opening_message_leaves_out_a_name_it_cannot_trust(display_name):
+    member = _context("SYN-0001", FakeLLM({})).member.model_copy(update={"display_name": display_name})
+    assert welcome_message(member).startswith("Hi! Ask about your status")

@@ -300,6 +300,13 @@ def _first_name(member: Member) -> str | None:
     return first if re.fullmatch(r"[A-Za-z][A-Za-z'\-]{0,29}", first) else None
 
 
+def welcome_message(member: Member) -> str:
+    """The chat's opening line for a `Member`, with their first name only when it can be trusted."""
+    name = _first_name(member)
+    return (f"Hi {name}!" if name else "Hi!") + (" Ask about your status, proof, or next step. "
+                                                  "I can explain your result, but I cannot change it.")
+
+
 def _greet(question: str, member: Member) -> list[str]:
     if re.search(r"\bthanks?\b|thank you", question.lower()):
         return ["You're welcome. Is there anything else I can help with?"]
