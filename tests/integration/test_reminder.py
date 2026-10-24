@@ -51,6 +51,10 @@ FORBIDDEN_WORDS = ("synthetic", "masshealth", "medicaid", "syn-", "medically", "
                    "substance_use", "disability")
 
 _PAREN_SUFFIX = re.compile(r"\s*\([^()]*\)\s*$")
+# R3: a first name must look like a name: a letter, then letters, apostrophes or hyphens.
+NAME_SHAPE = re.compile(r"[A-Za-z][A-Za-z'-]*")
+# R3: program names are never used as a first name (compared case-insensitively).
+PROGRAM_NAMES = ("masshealth", "medicaid")
 
 
 def fmt_date(d: date) -> str:
@@ -67,15 +71,18 @@ def expected_first_name(display_name: str) -> str:
     """R3 oracle. Order matters:
     1. drop one trailing parenthesised suffix such as ' (synthetic)' from the raw name,
     2. take the first whitespace-separated token (str.split),
-    3. NFKD, then keep only printable non-space ASCII (0x21-0x7E),
+    3. NFKD, then drop every non-ASCII character,
     4. cut to 20 characters,
-    5. empty -> 'there'.
+    5. use it only if it fully matches ^[A-Za-z][A-Za-z'-]*$ and is not a program name
+       (MassHealth or Medicaid, any case); otherwise 'there'.
     """
     tokens = _PAREN_SUFFIX.sub("", display_name).split()
     if not tokens:
         return FALLBACK_NAME
-    folded = "".join(ch for ch in unicodedata.normalize("NFKD", tokens[0]) if "!" <= ch <= "~")
-    return folded[:FIRST_NAME_MAX] or FALLBACK_NAME
+    folded = "".join(ch for ch in unicodedata.normalize("NFKD", tokens[0]) if ch.isascii())[:FIRST_NAME_MAX]
+    if NAME_SHAPE.fullmatch(folded) is None or folded.lower() in PROGRAM_NAMES:
+        return FALLBACK_NAME
+    return folded
 
 
 def greeting_for(display_name: str) -> str:
@@ -84,8 +91,8 @@ def greeting_for(display_name: str) -> str:
 
 
 def body_of(msg: str, display_name: str) -> str:
-    """The message after the greeting. Content checks run on the body so a first name like '$1.00'
-    or 'MassHealth' cannot make a check pass or fail by accident."""
+    """The message after the greeting. Content checks run on the body so a first name such as
+    'Shortt' or 'Review' cannot make a check pass or fail by accident."""
     greeting = greeting_for(display_name)
     assert msg.startswith(greeting), f"expected greeting {greeting!r}, got {msg!r}"
     return msg[len(greeting):]
@@ -271,9 +278,9 @@ def personas(members, expected_status, expected_wallet, expected_decisions, gold
     return out
 
 
-def _with_status(status: ProofKitStatus, **update) -> ProofKitStatus:
+def _with_status(base: ProofKitStatus, **update) -> ProofKitStatus:
     """Rebuild through the constructor so every contract validator runs again."""
-    return ProofKitStatus.model_validate({**status.model_dump(), **update})
+    return ProofKitStatus.model_validate({**base.model_dump(), **update})
 
 
 def _month(month: str, *, qualifies: bool, shortfall: str = "0.00", needs_review: bool = False) -> MonthlyCompliance:
@@ -464,7 +471,21 @@ def test_needs_review_from_clinician_review_leaks_no_reasons(personas):
     ("😀 Sam", "there"),                                      # first token folds to nothing
     ("李", "there"),
     ("Bartholomew-Alexander-Fitzgerald Smith", "Bartholomew-Alexande"),
+    ("Abcdefghijklmnopqrstuvwxy Smith", "Abcdefghijklmnopqrst"),   # 25 letters -> 20
     ("x" * 80, "x" * 20),
+    ("O'Neil Smith", "O'Neil"),                               # apostrophe after the first letter is fine
+    ("Mary-Jane Watson", "Mary-Jane"),                        # hyphen after the first letter is fine
+    # tokens that do not look like a name fall back to 'there'
+    ("SYN-0004 Patel", "there"),
+    ("0404", "there"),
+    ("Dev2 Patel", "there"),
+    ("-Dev Patel", "there"),
+    ("'Dev Patel", "there"),
+    ("Dev. Patel", "there"),
+    ("$1.00 Dev", "there"),
+    ("Patel, Dev", "there"),
+    ("MassHealth Dev", "there"),
+    ("MEDICAID Dev", "there"),
 ])
 def test_greeting_uses_folded_first_name_only(personas, display_name, first):
     assert expected_first_name(display_name) == first           # guards the oracle itself
@@ -474,6 +495,36 @@ def test_greeting_uses_folded_first_name_only(personas, display_name, first):
     msg = sms_reminder(member, status)
     assert_sms_shape(msg, member)
     assert msg.startswith(f"Hi {first},")
+
+
+HOSTILE_LEAKS = ("SYN-0004", "0404", "M32", "Patel", "REPLY", "<script>")
+HOSTILE_LEAKS_ANY_CASE = ("masshealth", "medicaid")
+
+
+@pytest.mark.parametrize("display_name", [
+    "SYN-0004 Patel",
+    "0404 Patel",
+    "M32.14 Dev",
+    "MassHealth Dev",
+    "medicaid Dev",
+    "Patel, Dev",
+    "Dev,REPLY-YES Smith",
+    "<script> Dev",
+    "123",
+])
+def test_hostile_first_token_falls_back_to_there(personas, display_name):
+    """R3 + R4 on the WHOLE message: a first token that is not a name never reaches the SMS."""
+    assert expected_first_name(display_name) == FALLBACK_NAME   # guards the oracle itself
+    _, status, _ = personas["SYN-0004"]
+    member = Member(member_id="SYN-0004", display_name=display_name, renewal_date=date(2027, 3, 20),
+                    phone_last4="0404")
+    msg = sms_reminder(member, status)
+    assert_sms_shape(msg, member)
+    assert msg.startswith("Hi there,"), msg
+    for leak in HOSTILE_LEAKS:
+        assert leak not in msg, f"{leak!r} leaked into {msg!r}"
+    for leak in HOSTILE_LEAKS_ANY_CASE:
+        assert leak not in msg.lower(), f"{leak!r} leaked into {msg!r}"
 
 
 def test_long_first_name_keeps_required_facts(personas):

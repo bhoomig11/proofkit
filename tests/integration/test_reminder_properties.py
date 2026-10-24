@@ -31,8 +31,11 @@ from proofkit.contracts import (
 )
 from proofkit.integration.reminder import sms_reminder
 from tests.integration.test_reminder import (
+    FALLBACK_NAME,
     FIRST_NAME_MAX,
     INCOME_REQUIRED,
+    NAME_SHAPE,
+    PROGRAM_NAMES,
     PROOF_BUFFER,
     SMS_LIMIT,
     assert_content,
@@ -229,6 +232,8 @@ def test_r3_greeting_is_the_folded_first_name(name, sc, member_id, phone, condit
     msg = sms_reminder(member, build_status(sc, member_id=member_id, condition=condition))
     first = expected_first_name(name)
     assert 0 < len(first) <= FIRST_NAME_MAX and all("!" <= c <= "~" for c in first)
+    # guards the oracle: either the fallback, or a name-shaped token that is not a program name
+    assert first == FALLBACK_NAME or (NAME_SHAPE.fullmatch(first) and first.lower() not in PROGRAM_NAMES), first
     assert msg.startswith(f"Hi {first},"), (name, msg)
 
 
