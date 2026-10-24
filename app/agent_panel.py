@@ -95,15 +95,23 @@ def describe_inputs(tool: str, inputs: dict[str, str]) -> str | None:
 _MARKDOWN_ENTITIES = {c: f"&#{ord(c)};" for c in "[]()*_`#|~$\\"}
 
 
-def answer_html(text: str) -> str:
+def answer_html(text: str, lang: str | None = None, announce: bool = False) -> str:
     """Wrap dynamic coach text in one wrapping block that renders as plain characters.
 
     HTML is escaped, markdown and formula characters become entities, and line breaks become <br> so the
     block has no blank lines (a blank line would end the HTML block and let markdown run again).
+    `lang` tells screen readers which language to read; `announce` marks the newest answer as a live region.
     """
     safe = escape_plain(text.replace("\r\n", "\n").replace("\r", "\n"))
     safe = "".join(_MARKDOWN_ENTITIES.get(c, c) for c in safe).replace("\n", "<br>")
-    return f"<div class='pk-answer' style='white-space:normal;overflow-wrap:anywhere'>{safe}</div>"
+    attrs = (f" lang='{lang}'" if lang in LANGUAGE_OPTIONS.values() else "") \
+        + (" role='status' aria-live='polite'" if announce else "")
+    return f"<div class='pk-answer'{attrs} style='white-space:normal;overflow-wrap:anywhere'>{safe}</div>"
+
+
+def answer_language(result: ChatResult, selected: str) -> str:
+    """The language the answer is really in: offline answers are the English facts, whatever was selected."""
+    return "en" if result.answer == " ".join(result.facts) else selected
 
 
 def _safe_json_string(value: str) -> str:
@@ -152,11 +160,12 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
         if st.button(label, key=f"suggested-{index}", use_container_width=True):
             suggested = label
 
-    for question, result in st.session_state.chat_messages:
+    messages = st.session_state.chat_messages
+    for index, (question, result) in enumerate(messages):
         with st.chat_message("user"):
-            st.text(question)
+            st.markdown(answer_html(question), unsafe_allow_html=True)
         with st.chat_message("assistant"):
-            _render_answer(result, language, components, st, show_tech)
+            _render_answer(result, language, components, st, show_tech, announce=index == len(messages) - 1)
 
     question = suggested or st.chat_input("Ask Coverage Coach")
     if question:
@@ -179,9 +188,14 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
         st.rerun()
 
 
-def _render_answer(result: ChatResult, language: str, components: Any, st: Any, show_tech: bool = False) -> None:
+def _render_answer(result: ChatResult, language: str, components: Any, st: Any, show_tech: bool = False,
+                   announce: bool = False) -> None:
     """Render the answer, then 'How we know this': inputs and verified facts; tech details only on request."""
-    st.markdown(answer_html(result.answer), unsafe_allow_html=True)
+    spoken = answer_language(result, language)
+    st.markdown(answer_html(result.answer, lang=spoken, announce=announce), unsafe_allow_html=True)
+    if spoken != language:
+        st.caption("Shown in English because live AI is off.")
+    language = spoken  # read aloud with the voice that matches the text
     with st.expander("How we know this"):
         described = describe_inputs(result.tool, dict(result.inputs))
         if described:

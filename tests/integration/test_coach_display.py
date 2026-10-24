@@ -48,9 +48,9 @@ def test_app_shows_coach_answer_in_the_wrapping_block():
     at.run()
     at.button(key="suggested-0").click().run()
     assert not at.exception, at.exception
-    answers = [m.value for m in at.markdown if "pk-answer" in m.value]
+    answers = [m.value for m in at.markdown if "pk-answer" in m.value and "At risk" in m.value]
     assert answers, "the coach answer should render in the wrapping block"
-    assert "At risk" in answers[0] and "&#36;60" in answers[0]
+    assert "&#36;60" in answers[0]
 
 
 def test_coach_reply_carries_the_validated_inputs():
