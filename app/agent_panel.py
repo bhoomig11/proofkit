@@ -6,9 +6,11 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Any, Protocol
 
+from pydantic import ValidationError
+
 from proofkit.common.llm import LLMClient
 from proofkit.contracts import FindingsBundle, Member, ProofKitStatus
-from proofkit.integration import ask_coach
+from proofkit.integration import ask_coach, welcome_message
 from proofkit.wallet import WalletRules
 
 from app.format import format_money, month_long
@@ -16,11 +18,11 @@ from app.highlight import escape_plain
 
 SUGGESTED_QUESTIONS = (
     "Am I covered?",
-    "Why?",
     "What if I earn $60 more?",
     "What should I do next?",
 )
 LANGUAGE_OPTIONS = {"EN": "en", "ES": "es", "PT": "pt", "HT": "ht"}
+VOICE_TAGS = {"en": "en-US", "es": "es-US", "pt": "pt-BR"}  # browsers have no Haitian Creole voice or recognizer
 PENDING_KEY = "coach_pending"  # a chip or typed question waiting to be answered on the next run
 INPUT_KEY = "coach_input"
 
@@ -104,8 +106,10 @@ def answer_html(text: str, lang: str | None = None, announce: bool = False) -> s
     block has no blank lines (a blank line would end the HTML block and let markdown run again).
     `lang` tells screen readers which language to read; `announce` marks the newest answer as a live region.
     """
-    safe = escape_plain(text.replace("\r\n", "\n").replace("\r", "\n"))
-    safe = "".join(_MARKDOWN_ENTITIES.get(c, c) for c in safe).replace("\n", "<br>")
+    # One pass, one escape per character: escaping HTML first and then markdown would re-escape the '#'
+    # inside entities like &#x27; and show the raw code instead of an apostrophe.
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    safe = "".join(_MARKDOWN_ENTITIES.get(c) or escape_plain(c) for c in text).replace("\n", "<br>")
     attrs = (f" lang='{lang}'" if lang in LANGUAGE_OPTIONS.values() else "") \
         + (" role='status' aria-live='polite'" if announce else "")
     return f"<div class='pk-answer'{attrs} style='white-space:normal;overflow-wrap:anywhere'>{safe}</div>"
@@ -121,11 +125,50 @@ def _safe_json_string(value: str) -> str:
     return json.dumps(value).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
 
 
+def _voice_input_html(language: str) -> str:
+    """A mic button: the browser turns speech into text and puts it in the chat box for the member to check.
+    It never sends by itself. Chrome's recognizer sends the audio to Google to transcribe it."""
+    tag = _safe_json_string(VOICE_TAGS[language])
+    return f"""<!doctype html><html><body style="margin:0;background:transparent;font-family:sans-serif">
+<button id="mic" aria-label="Speak your question" title="Speak your question" aria-pressed="false"
+ style="width:44px;height:44px;padding:0;border:0;border-radius:50%;background:transparent;color:#888;cursor:pointer">
+<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path
+ d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/>
+</svg></button>
+<span id="note" role="status" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)"></span>
+<script>
+const language={tag}; const button=document.getElementById('mic'); const note=document.getElementById('note');
+const host=window.parent; const Recognition=host.SpeechRecognition || host.webkitSpeechRecognition;
+let idle = '#888', active = '#5032C8';
+try {{ const css = host.getComputedStyle(host.document.documentElement);
+  idle = css.getPropertyValue('--pk-text').trim() || idle; active = css.getPropertyValue('--pk-accent').trim() || active;
+}} catch (e) {{}}
+button.style.color = idle;
+function say(words) {{ note.textContent = words; button.title = words; }}
+if (!Recognition) {{ button.disabled = true; button.style.opacity = '.4'; say('Voice input needs Chrome, Edge or Safari.'); }}
+button.addEventListener('click', () => {{
+  const box = host.document.querySelector('.st-key-coach_panel textarea');
+  if (!box || !Recognition) return;
+  const listen = new Recognition(); listen.lang = language; listen.interimResults = false;
+  listen.onstart = () => {{ button.setAttribute('aria-pressed','true'); button.style.color = active; say('Listening...'); }};
+  listen.onerror = () => {{ say('Sorry, I could not hear that. Try again, or type.'); }};
+  listen.onend = () => {{ button.setAttribute('aria-pressed','false'); button.style.color = idle; }};
+  listen.onresult = (event) => {{
+    // React owns the box's value: set it through the native setter, then tell React it changed.
+    const setValue = Object.getOwnPropertyDescriptor(host.HTMLTextAreaElement.prototype, 'value').set;
+    setValue.call(box, event.results[0][0].transcript);
+    box.dispatchEvent(new host.Event('input', {{bubbles: true}}));
+    box.focus(); say('Check the words, then press Enter.');
+  }};
+  listen.start();
+}});
+</script></body></html>"""
+
+
 def _read_aloud_html(answer: str, language: str) -> str:
     """A compact read-aloud control. Pressing it again while speaking stops the voice."""
-    language_tags = {"en": "en-US", "es": "es-US", "pt": "pt-BR"}
     text = _safe_json_string(answer)
-    tag = _safe_json_string(language_tags[language])
+    tag = _safe_json_string(VOICE_TAGS[language])
     return f"""<!doctype html><html><body style="margin:0;background:transparent;font-family:sans-serif">
 <button id="speak" aria-label="Read this answer aloud" aria-pressed="false"
  style="min-height:44px;padding:4px 10px;border:0;background:transparent;color:#5032C8;
@@ -153,8 +196,6 @@ def render_settings() -> None:
     """Chat settings, shown behind the gear in the coach header. Values live in session state by key."""
     import streamlit as st
 
-    st.selectbox("Answer language", tuple(LANGUAGE_OPTIONS), key="coach_language")
-    st.toggle("Plain language", key="coach_plain")
     st.toggle("Show how the AI works", key="coach_show_tech",
               help="Adds which read-only tool answered and whether live AI was used.")
 
@@ -170,8 +211,8 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
     import streamlit.components.v1 as components
 
     coach = backend or CoachBackend()
-    language = LANGUAGE_OPTIONS.get(st.session_state.get("coach_language", "EN"), "en")
-    plain = bool(st.session_state.get("coach_plain", True))
+    language = "en"  # shortcut: language picker removed until offline answers are translated; restore it then
+    plain = True  # answers are always plain language
     show_tech = bool(st.session_state.get("coach_show_tech", False))
 
     if "chat_messages" not in st.session_state:
@@ -196,26 +237,32 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
         )
         try:
             st.session_state.chat_messages.append((question, coach.ask(question, context)))
-        except ValueError as exc:
+        except ValidationError:  # an internal error (e.g. stale cached data after a code reload): never show it
+            st.error("Sorry, I couldn't answer that just now. Please try again.")
+        except ValueError as exc:  # the coach's own member-safe messages, e.g. a question that is too long
             st.error(str(exc))
     messages = st.session_state.chat_messages
+
+    with st.container(key="coach_suggestions"):  # above the messages, so they stay in view for every question
+        for index, label in enumerate(SUGGESTED_QUESTIONS):
+            st.button(label, key=f"suggested-{index}", on_click=_queue, args=(label,))
 
     with st.container(height=chat_height, border=False, key="coach_messages"):
         if not messages:
             with st.chat_message("assistant"):
-                st.markdown(answer_html(
-                    f"Hi {view.member.display_name.split()[0]}! Ask about your status, proof, or next step. "
-                    "I can explain your result, but I cannot change it."), unsafe_allow_html=True)
-            with st.container(key="coach_suggestions"):
-                for index, label in enumerate(SUGGESTED_QUESTIONS):
-                    st.button(label, key=f"suggested-{index}", on_click=_queue, args=(label,))
+                st.markdown(answer_html(welcome_message(view.member)), unsafe_allow_html=True)
         for index, (asked, result) in enumerate(messages):
             with st.chat_message("user"):
                 st.markdown(answer_html(asked), unsafe_allow_html=True)
             with st.chat_message("assistant"):
                 _render_answer(result, language, components, st, show_tech, announce=index == len(messages) - 1)
 
-    st.chat_input("Write a message...", key=INPUT_KEY, on_submit=_queue_typed)
+    with st.container(key="coach_compose"):
+        box, mic = st.columns([8, 1], vertical_alignment="center")
+        with box:
+            st.chat_input("Write a message...", key=INPUT_KEY, on_submit=_queue_typed)
+        with mic:
+            components.html(_voice_input_html(language), height=44)
 
 
 def _queue(question: str) -> None:

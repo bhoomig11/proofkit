@@ -5,7 +5,7 @@ RenewRight is the submission name. The repo, package and contracts still use the
 ## Summary (5 bullets)
 
 - The three core modules (P1A extraction, P1B reasoning, P2 wallet) were built first with Claude Code, test-first. Kiro was not used for them.
-- Kiro came in on 2026-10-24 for the FINAL phase and follow-ups: SMS reminder, PDF uploads, offline demo mode, a fictional-brand rename, an HTML proof packet, an MCP server (RED merged on its branch only), and the `.kiro/` steering, hooks and agents.
+- Kiro came in on 2026-10-24 for the FINAL phase and follow-ups: SMS reminder, PDF uploads, offline demo mode, a fictional-brand rename, an HTML proof packet, Spanish and Portuguese SMS, an MCP server with a read-only navigator agent, and the `.kiro/` steering, hooks and agents.
 - Two Kiro surfaces: the IDE in spec mode built the proof packet; CLI 2.34 ran headless RED/GREEN jobs with least-privilege custom agents. Kiro never committed or pushed.
 - Hypothesis property tests written by Kiro found 2 real bugs in already-merged wallet code that 143 unit tests had passed.
 - A read-only `security-reviewer` agent on a different model (`gpt-5.6-sol`) found 6 HIGH and 2 MEDIUM issues across SMS and demo mode, including one HIGH introduced by a fix. All were fixed test-first. The packet findings are a parked follow-up.
@@ -31,7 +31,9 @@ RenewRight is the submission name. The repo, package and contracts still use the
 | Fictional gig platforms | follow-up | Kiro CLI | `798eb07` (RED), `166eeb7` (refactor) |
 | Offline demo mode | FINAL | Kiro CLI, spec `offline-demo` | `5c3aa6c` (spec), `c118c3d`, `e060ac7`, `6176ebe` (RED), `86b7180` (GREEN) |
 | HTML proof packet (`render_packet`) | FINAL | Kiro IDE spec mode, spec `proof-packet` | `26e45f8`, renamed in `db1e602`, merged `a379a00`, exported `9464046` |
-| RenewRight MCP server | follow-up | Kiro CLI RED/GREEN agents | `721ca8f` (RED) on `final/karthik-mcp`; GREEN not yet committed |
+| RenewRight MCP server | follow-up | Kiro CLI RED/GREEN agents | `721ca8f`, `d05cc0d` (RED), `7660dc4` (GREEN), merged `b7809f1`; registered with navigator agent `dc970f5` |
+| Spanish and Portuguese SMS reminders | follow-up | Kiro CLI, spec `sms-reminder` | `f48c81e` (RED), `8667e35` (GREEN), merged `2375310` |
+| `renewright-navigator` power (draft) | follow-up | Kiro CLI | `0d69afe` |
 | Coverage Copilot UI (`app/`, `packet.py`) | FINAL | Kiro spec, then Claude Code | `c663854`, `.kiro/specs/final-ui/context.md` |
 
 Notes on `main`:
@@ -61,14 +63,15 @@ How one headless job ran:
 3. The same steps ran with `<lane>-green`. Claude Code re-ran the module suite before committing `feat:` or `fix:`.
 4. `security-reviewer` read the diff. Findings that were fixed got new RED tests before the fix.
 
-Custom agents (`.kiro/agents/`, 8 files):
+Custom agents (`.kiro/agents/`, 9 files):
 
 - `sms-red`, `p2-pdf-red`: may write only tests and fixtures.
 - `sms-green`, `p2-pdf-green`: may write only source and config, so a GREEN agent cannot weaken a test.
 - `security-reviewer` and `kiro-config-author`: no shell.
+- `navigator`: tools `read` and `@renewright` only, no writes, no shell (`dc970f5`; see section 5).
 - `main-foundation`: may write only `scripts/check_ownership.py` and `pyproject.toml`. `p2-verify`: only `setup/TRACKER.md`.
 - Every agent denies `.env` reads. Lane agents also deny `git commit`, `git push`, other git writes and recursive deletes.
-- The demo, rename and MCP jobs have no agent files on `main`; which agent ran them is not verified from the repo.
+- The demo, rename, MCP server and SMS i18n build jobs have no agent files on `main`; which agent ran them is not verified from the repo.
 
 ## 2. Spec-driven development
 
@@ -77,7 +80,7 @@ Specs in `.kiro/specs/`, each with `requirements.md`, `design.md` and `tasks.md`
 | Spec | Author | Produced |
 |---|---|---|
 | `proof-packet` | Kiro IDE | `render_packet` in `proof_packet.py`, 46 tests incl. properties (`26e45f8`) |
-| `sms-reminder` | Kiro CLI | `sms_reminder` (`c821a44`) |
+| `sms-reminder` | Kiro CLI | `sms_reminder` (`c821a44`); Spanish and Portuguese via `lang="es"\|"pt"` (`f48c81e` RED, `8667e35` GREEN, merged `2375310`), ASCII-safe because accented letters force UCS-2 and a 70-character SMS |
 | `pdf-uploads` | Kiro CLI | PDF uploads, bomb-proof decoding, exact month split (`140e752`) |
 | `offline-demo` | Kiro CLI | `proofkit.integration.demo` (`86b7180`) |
 | `final-ui` (plus `context.md` journal) | Bhoomika's session | Coverage Copilot UI (`c663854`) |
@@ -97,7 +100,8 @@ How specs made RED/GREEN mechanical: the orchestrator handed Kiro one numbered t
 | PDF uploads + split | 12 new tests fail, 144 pass (`610bc32`) | test-p2: 156 passed, 97% wallet coverage (`140e752`) |
 | Fictional platforms | 6 fail, 2 pass (`798eb07`) | test-p2: 165 passed, 97% coverage, ruff clean (`166eeb7`) |
 | Offline demo | fails on missing `proofkit.integration.demo` (`c118c3d`) | 19 demo tests pass, 106 with the reminder suites (`86b7180`) |
-| MCP server | 271-line test file (`721ca8f`) | 28 tests green (team figure; GREEN not committed yet) |
+| MCP server | 271-line test file (`721ca8f`), plus the huge-integer case (`d05cc0d`) | 29 tests pass (`7660dc4`) |
+| ES/PT SMS | fails with `TypeError` until `lang` exists (`f48c81e`) | 103 reminder tests pass: example, property and i18n (`8667e35`) |
 
 Spec vs vibe coding, from this project:
 
@@ -141,10 +145,12 @@ Conflicts we hit:
 
 ## 5. MCP
 
-- Playwright MCP 0.0.83 is configured in `.kiro/settings/mcp.json` (`npx -y @playwright/mcp@0.0.83 --headless`, empty `env`, no credentials). It was NOT exercised in any recorded run. The `final-ui` journal lists "Playwright browser run + ui-test-report.md" under "Not done"; the UI was smoke-tested with Streamlit's `AppTest` instead (`tests/integration/test_ui_app.py`).
-- RenewRight as an MCP server: `src/proofkit/integration/mcp_server.py` on branch `final/karthik-mcp`. It is stdlib JSON-RPC over stdio with 5 read-only tools: `list_members`, `member_status`, `wallet_months`, `sms_reminder`, `triage`. It runs offline through `demo_llm`. It was built test-first by Kiro CLI RED/GREEN agents. The RED commit (`721ca8f`) covers the initialize handshake, tool schemas, each persona's status, Dev's $60 shortfall and SMS, triage order, errors without tracebacks, JSON-RPC errors, a subprocess stdio round trip, no sockets and no note quotes. 28 tests are green (team figure). The GREEN implementation exists in the branch worktree but is not committed yet.
-- Pending: registration in `.kiro/settings/mcp.json` and a Kiro navigator agent that calls the server. Neither is on `main` (`mcp.json` on `main` lists only Playwright).
-- What this enables: Kiro, or any MCP client, can triage members and draft SMS reminders through tools, without reading notes or documents.
+- RenewRight as an MCP server: `python -m proofkit.integration.mcp_server` (`src/proofkit/integration/mcp_server.py`). It is stdlib JSON-RPC 2.0 over stdio with 5 read-only tools: `list_members`, `member_status`, `wallet_months`, `sms_reminder`, `triage`. It runs offline over the synthetic fixtures through `demo_llm` and `run_member`. Built test-first by Kiro CLI: RED `721ca8f` (initialize handshake, tool schemas, each persona's status, Dev's $60 shortfall and SMS, triage order, errors without tracebacks, JSON-RPC errors, a subprocess stdio round trip, no sockets, no note quotes), GREEN `7660dc4` (29 tests pass, per its commit body). Merged into `main` in `b7809f1`.
+- Security review (`gpt-5.6-sol`, read-only): no HIGH. One MEDIUM: Python's integer digit limit made `json.loads` raise a plain `ValueError` that stopped the serve loop. Fixed test-first (RED `d05cc0d`, fix in `7660dc4`).
+- Registered in `dc970f5`: `.kiro/settings/mcp.json` gains a `renewright` server (launcher `.kiro/mcp/renewright.py`) with its five tools auto-approved, and `.kiro/agents/navigator.json` is a read-only navigator agent (tools `read` and `@renewright` only; no writes, no shell).
+- A real headless Kiro CLI session (`kiro-cli chat --v3 --agent navigator --no-interactive --require-mcp-startup`) made 8 tool calls: a tool load, `triage`, then `member_status`, `wallet_months` and `sms_reminder` for each at-risk member (SYN-0004, SYN-0005). It returned the at-risk table and the SMS drafts as the tools produced them, with 0 permission denials. Transcript: `.kiro/specs/renewright-mcp/navigator-session.md`.
+- What this enables: Kiro, or any MCP client, works as a navigator assistant over RenewRight. It can triage members, explain shortfalls and deadlines, and draft SMS reminders, read-only and offline, without reading notes or documents.
+- Playwright MCP 0.0.83 is configured in `.kiro/settings/mcp.json` (`npx -y @playwright/mcp@0.0.83 --headless`, empty `env`, no credentials), but it fails to start headless on our Windows machine ("Connection closed"), so it was never exercised. The navigator agent declares only the `renewright` server, so the Playwright failure does not block it. The UI was smoke-tested with Streamlit's `AppTest` instead (`tests/integration/test_ui_app.py`).
 
 ## 6. Property-based testing
 
@@ -161,6 +167,7 @@ Property suites:
 
 - Wallet split, `tests/unit/wallet/test_split_properties.py`, 200 examples each: never dropped, each piece inside one calendar month, contiguous coverage, quote kept, exact income and hours, the over-24-h/day rule. Requirements: `pdf-uploads` R4.1 to R4.5.
 - SMS, `tests/integration/test_reminder_properties.py`, 300 examples each: at most 160 printable-ASCII characters, greeting is the folded first name only, output invariant under member ID, phone, later name words, conditions and exemption type. Requirements: `sms-reminder` R1 to R4 (design P1 to P8).
+- SMS i18n, `tests/integration/test_reminder_i18n.py`, 200 examples: for `es` and `pt`, output stays printable ASCII and is invariant under member ID and phone. Reuses the strategies from `test_reminder_properties.py` (`f48c81e`). With the example tests, 103 reminder tests pass (`8667e35`).
 - Proof packet, `tests/integration/test_packet_properties.py`, 100 examples each, from the IDE spec: Property 3 (capability confinement: fixed CSP, no `<script>`, no `on*` attributes), 5 (merged highlights exactly cover valid evidence), 7 (missing-note evidence preserved and labelled), 10 (byte-deterministic output). Requirements include 1.2, 3.4, 5.1 to 5.6, 6.1 to 6.4 and 12.2 to 12.6.
 - Rename guard (`798eb07`): not randomized, but an invariant test that scans P2 files, including decoded PDF fixtures, for real gig-platform brands.
 
@@ -169,17 +176,19 @@ Not done: `offline-demo` task 15 (properties) and `pdf-uploads` task 6 (CSV spli
 ## 7. Kiro powers
 
 - We evaluated the registry (Datadog, Dynatrace, Figma, Neon, Netlify, Postman, Supabase, Stripe, Strands SDK, AWS Aurora). None fit a Python + Streamlit Medicaid tool, so none were installed.
-- A custom power, `powers/renewright-navigator`, packaging the RenewRight MCP server and a navigator-triage skill, was drafted, not yet imported or validated. `powers/` is not in git on `main` or in the MCP worktree.
+- A custom power, `powers/renewright-navigator`, is committed on `main` (`0d69afe`) as a draft: the RenewRight MCP server (`mcp.json`) plus a navigator-triage skill (`skills/navigator-triage/SKILL.md`). It is not yet imported into Kiro, and its `$schema` URLs are not verified.
 - Third-party tooling: the `gpt-5.6-sol` model through Kiro as an independent, read-only `security-reviewer` (no shell, reports HIGH/MEDIUM/LOW against `docs/04_SECURITY.md`). The code was written by a different model. Findings:
   - SMS: 3 HIGH, fixed. The greeting could leak IDs such as "SYN-0004", there was no member-ID check, and spec and steering conflicted over dollar amounts. A LOW on decimal context was also fixed (`a100e7d`, `7cc1d9c`, `86749cc`, `c821a44`).
   - Demo mode: 2 HIGH and 2 MEDIUM, fixed (`e060ac7` RED). A re-review found a new HIGH that the fix introduced: containment matching picked the source with the most items, so 36 cross-member note pairs leaked another member's golden evidence (`6176ebe`). Fixed by requiring an exact match or exactly one contained source (`86b7180`).
   - Rename: none (`166eeb7`).
+  - Spanish and Portuguese SMS: no HIGH or MEDIUM (`8667e35`).
+  - MCP server: no HIGH; one MEDIUM (integer digit limit crashing the serve loop), fixed test-first (`d05cc0d` RED, `7660dc4`). Details in section 5.
   - Proof packet: escaping and CSP clean. A member-ID check and the fixed disclaimer are a known follow-up (RED tests `513a751`, reverted in `c7bb2cc`, parked on `final/karthik-packet-isolation`).
 - Also from the PDF lane: pypdf 6.21.2 alone accepted a 200 MB FlateDecode bomb; decoding now runs under output caps equal to `max_bytes` (`140e752`). After the pin bump, pip-audit went from 60 pypdf advisories and 1 python-dotenv advisory to 0 (`b2cd35f`).
 
 ## 8. Credits and models
 
-- Credits: 487.74 of 2,000 used on Karthik's account (KIRO FREE plus hackathon bonus) so far. To be refreshed at the end. Teammates' usage is not included.
+- Credits: 542.47 of 2,000 used on Karthik's account (KIRO FREE plus hackathon bonus). Teammates' usage is not included.
 - `claude-opus-5.5` (2x credits) ran the builders: lane agents, config author, foundation, verify.
 - `gpt-5.6-sol` (4.4x credits) ran only the reviews.
 
@@ -213,12 +222,10 @@ Files that exist: `.kiro/specs/final-ui/requirements.md`, `design.md`, `tasks.md
 
 ## Known follow-ups
 
-- Commit the MCP server GREEN, register it in `.kiro/settings/mcp.json`, add the navigator agent, and merge `final/karthik-mcp`.
-- Import and validate the `renewright-navigator` power.
+- Import the `renewright-navigator` power and verify its `$schema` URLs.
 - Proof packet member isolation: member-ID check and fixed disclaimer. RED tests and an unverified, interrupted GREEN attempt (`b2195d4`) are on `final/karthik-packet-isolation`. Switching the UI download button to `render_packet` is optional.
 - Remaining real brand names: `scripts/build_fixtures.py`, `docs/00_CONTEXT.md`, `docs/06_TIMELINE.md`, `docs/roles/P2_WALLET.md`, one UI string, and the frozen contract example and contract tests (`166eeb7`).
 - Wire `choose_llm` (demo mode) and `sms_reminder` into the app. The `final-ui` journal lists SMS as "OUT (unmerged branch)"; the app has its own offline replay in `app/offline.py`.
 - Spec work: `offline-demo` task 15 and syncing tasks 8 and 15; `pdf-uploads` task 6 (CSV properties); tick completed tasks in `sms-reminder` and `final-ui`.
 - Update `tech.md` and `wallet.md` steering for `pypdf==6.21.2` and PDF uploads being on.
-- Run a recorded Playwright MCP pass and write `.kiro/specs/final-ui/ui-test-report.md`.
-- Refresh the credit figure.
+- Get Playwright MCP starting headless on Windows, then run a recorded pass and write `.kiro/specs/final-ui/ui-test-report.md`.

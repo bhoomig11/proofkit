@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agentplugins.dev/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "renewright": {
+      "type": "stdio",
+      "command": "python",
+      "args": [
+        ".kiro/mcp/renewright.py"
+      ],
+      "env": {}
+    }
+  }
+}

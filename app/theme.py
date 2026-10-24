@@ -3,14 +3,14 @@ from __future__ import annotations
 
 TOKENS: dict[str, dict[str, str]] = {
     "light": {
-        "bg": "#F7F7FC", "surface": "#FFFFFF", "text": "#1D1B2E", "muted": "#55546A",
-        "accent": "#5032C8", "accent_text": "#FFFFFF", "ok": "#176B4D", "warn": "#754500",
-        "risk": "#9C2639", "focus": "#006C75", "border": "#777389", "mark": "#FFF0A8",
+        "bg": "#F6F8F9", "surface": "#FFFFFF", "text": "#14202B", "muted": "#4B5A67",
+        "accent": "#0F766E", "accent_text": "#FFFFFF", "ok": "#15803D", "warn": "#92400E",
+        "risk": "#B91C1C", "focus": "#1D4ED8", "border": "#CBD5DC", "mark": "#FEF08A",
     },
     "dark": {
-        "bg": "#12111A", "surface": "#211E2F", "text": "#F7F5FF", "muted": "#C5C0D4",
-        "accent": "#C1B4FF", "accent_text": "#171225", "ok": "#74DCB2", "warn": "#FFD07A",
-        "risk": "#FF9BAC", "focus": "#75E5EC", "border": "#9A94AB", "mark": "#655515",
+        "bg": "#111518", "surface": "#1A2026", "text": "#F1F5F7", "muted": "#B6C2CB",
+        "accent": "#5EEAD4", "accent_text": "#0B2B28", "ok": "#6EE7B7", "warn": "#FCD34D",
+        "risk": "#FDA4AF", "focus": "#93C5FD", "border": "#3A4651", "mark": "#6B5E12",
     },
 }
 
@@ -47,6 +47,9 @@ def build_css(theme: str, *, large_text: bool, comfortable: bool, reduce_motion:
 .pk-status-at_risk{{color:var(--pk-risk)}}
 mark{{background:var(--pk-mark);color:var(--pk-text);font-weight:750;text-decoration:underline 2px}}
 button,a,input,select,textarea,[role="button"]{{min-height:44px;min-width:44px}}
+button[kind="secondary"],button[kind="secondaryFormSubmit"]{{background:var(--pk-surface);color:var(--pk-text);border:1px solid var(--pk-border)}}
+button[kind="secondary"]:hover,button[kind="secondaryFormSubmit"]:hover{{border-color:var(--pk-accent);color:var(--pk-accent)}}
+button[kind="secondary"] p,button[kind="secondaryFormSubmit"] p{{color:inherit}}
 *:focus-visible{{outline:3px solid var(--pk-focus)!important;outline-offset:3px!important}}
 .pk-note{{white-space:pre-wrap;overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}}
 .pk-not-counted{{text-decoration:line-through;text-decoration-thickness:2px}}

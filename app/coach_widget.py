@@ -74,6 +74,9 @@ WIDGET_CSS = f"""<style>
 .st-key-coach_suggestions button{{border-radius:999px;padding:.25rem .8rem;min-height:44px;
   border:1px solid var(--pk-accent);color:var(--pk-accent);background:transparent;font-weight:600}}
 .st-key-coach_script{{display:none}}
+.st-key-coach_compose [data-testid="stHorizontalBlock"]{{gap:.25rem;align-items:center;flex-wrap:nowrap}}
+.st-key-coach_compose [data-testid="stColumn"]:first-child{{flex:1 1 auto!important;width:auto!important;min-width:0}}
+.st-key-coach_compose [data-testid="stColumn"]:last-child{{flex:0 0 44px!important;width:44px!important;min-width:44px}}
 @media (max-width:760px){{
   .st-key-coach_launcher{{right:16px;bottom:16px;width:56px!important}}
   .st-key-coach_launcher button{{justify-content:center;width:56px;height:56px;padding:0;border-radius:50%;
@@ -118,7 +121,7 @@ _DOCK_SCRIPT = """<script>
 </script>"""
 
 
-SETTING_DEFAULTS = {"coach_language": "EN", "coach_plain": True, "coach_show_tech": False}
+SETTING_DEFAULTS = {"coach_show_tech": False}
 
 
 def is_open(st: Any) -> bool:
