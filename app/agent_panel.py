@@ -189,7 +189,6 @@ def render_settings() -> None:
     """Chat settings, shown behind the gear in the coach header. Values live in session state by key."""
     import streamlit as st
 
-    st.selectbox("Answer language", tuple(LANGUAGE_OPTIONS), key="coach_language")
     st.toggle("Plain language", key="coach_plain")
     st.toggle("Show how the AI works", key="coach_show_tech",
               help="Adds which read-only tool answered and whether live AI was used.")
@@ -206,7 +205,7 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
     import streamlit.components.v1 as components
 
     coach = backend or CoachBackend()
-    language = LANGUAGE_OPTIONS.get(st.session_state.get("coach_language", "EN"), "en")
+    language = "en"  # shortcut: language picker removed until offline answers are translated; restore it then
     plain = bool(st.session_state.get("coach_plain", True))
     show_tech = bool(st.session_state.get("coach_show_tech", False))
 

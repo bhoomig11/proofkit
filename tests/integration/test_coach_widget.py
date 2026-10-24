@@ -97,12 +97,10 @@ def test_suggestions_stay_on_top_after_a_question():
 def test_settings_survive_minimizing_the_chat():
     at = signed_in()
     at.button(key="coach_open_btn").click().run()
-    at.selectbox(key="coach_language").set_value("ES").run()
     at.toggle(key="coach_plain").set_value(False).run()
     at.button(key="coach_min_btn").click().run()
     at.button(key="coach_open_btn").click().run()
     assert not at.exception, at.exception
-    assert at.selectbox(key="coach_language").value == "ES"
     assert at.toggle(key="coach_plain").value is False
     assert not at.warning                                # no "default value and Session State" warning
 

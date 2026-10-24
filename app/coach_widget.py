@@ -118,7 +118,7 @@ _DOCK_SCRIPT = """<script>
 </script>"""
 
 
-SETTING_DEFAULTS = {"coach_language": "EN", "coach_plain": True, "coach_show_tech": False}
+SETTING_DEFAULTS = {"coach_plain": True, "coach_show_tech": False}
 
 
 def is_open(st: Any) -> bool:
