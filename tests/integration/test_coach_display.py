@@ -68,7 +68,7 @@ def test_describe_inputs_is_plain_words():
 
 def _dev_what_if():
     at = open_coach()
-    at.button(key="suggested-2").click().run()  # "What if I earn $60 more?"
+    at.button(key="suggested-1").click().run()  # "What if I earn $60 more?"
     return at
 
 
@@ -111,3 +111,17 @@ def test_apostrophes_quotes_and_ampersands_are_escaped_exactly_once():
     assert "&#35;x27;" not in out and "&amp;#" not in out   # an entity must never be re-escaped
     assert out.count("&#x27;") == 2                         # I'm, you're
     assert "&amp;" in out and "&quot;why&quot;" in out and "&#35;1" in out
+
+
+def test_an_internal_error_is_never_shown_to_the_member(monkeypatch):
+    from app import agent_panel
+    from proofkit.contracts import Member
+
+    def broken(*args, **kwargs):
+        return Member.model_validate({})  # a pydantic error, like stale cached data after a code reload
+    monkeypatch.setattr(agent_panel, "ask_coach", broken)
+    at = open_coach("SYN-0004")
+    at.button(key="suggested-0").click().run()
+    shown = " ".join(e.value for e in at.error)
+    assert "validation error" not in shown.lower() and "pydantic" not in shown
+    assert "couldn't answer that" in shown

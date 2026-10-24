@@ -85,25 +85,23 @@ def test_minimize_keeps_the_conversation_and_close_clears_it():
     assert len(at.chat_message) == 1                     # close: fresh chat, only the greeting
 
 
-def test_suggestions_show_until_the_first_question():
+def test_suggestions_stay_on_top_after_a_question():
     at = signed_in()
     at.button(key="coach_open_btn").click().run()
-    assert {f"suggested-{i}" for i in range(4)} <= keys(at)
+    assert {f"suggested-{i}" for i in range(3)} <= keys(at)
     assert any("Ask about your status" in m.value for m in at.markdown)   # greeting before any question
     at.button(key="suggested-0").click().run()
-    assert not any(k.startswith("suggested-") for k in keys(at))
+    assert {f"suggested-{i}" for i in range(3)} <= keys(at)              # still there for the next question
 
 
 def test_settings_survive_minimizing_the_chat():
     at = signed_in()
     at.button(key="coach_open_btn").click().run()
-    at.selectbox(key="coach_language").set_value("ES").run()
-    at.toggle(key="coach_plain").set_value(False).run()
+    at.toggle(key="coach_show_tech").set_value(True).run()
     at.button(key="coach_min_btn").click().run()
     at.button(key="coach_open_btn").click().run()
     assert not at.exception, at.exception
-    assert at.selectbox(key="coach_language").value == "ES"
-    assert at.toggle(key="coach_plain").value is False
+    assert at.toggle(key="coach_show_tech").value is True
     assert not at.warning                                # no "default value and Session State" warning
 
 
@@ -115,3 +113,17 @@ def test_dock_script_only_moves_focus_and_scroll():
     assert "innerHTML" not in script and "fetch(" not in script and "textContent" not in script
     with pytest.raises(ValueError):
         dock_script("'); alert(1); ('", 0)
+
+
+def test_settings_only_offer_how_the_ai_works():
+    at = signed_in()
+    at.button(key="coach_open_btn").click().run()
+    toggles = {t.key for t in at.toggle}
+    assert "coach_show_tech" in toggles and "coach_plain" not in toggles   # answers are always plain language
+
+
+def test_suggestions_are_the_three_questions_with_useful_answers():
+    at = signed_in()
+    at.button(key="coach_open_btn").click().run()
+    labels = [b.label for b in at.button if b.key and b.key.startswith("suggested-")]
+    assert labels == ["Am I covered?", "What if I earn $60 more?", "What should I do next?"]

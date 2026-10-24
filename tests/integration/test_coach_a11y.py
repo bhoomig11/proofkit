@@ -22,11 +22,10 @@ def test_offline_facts_answer_is_english_even_when_spanish_is_selected():
     assert answer_language(worded, "es") == "es"
 
 
-def _ask(selected_language="EN"):
+def _ask():
     from tests.integration.test_coach_display import open_coach
 
     at = open_coach("SYN-0004")
-    at.selectbox(key="coach_language").set_value(selected_language).run()
     at.button(key="suggested-0").click().run()
     return at
 
@@ -44,8 +43,17 @@ def test_latest_answer_is_announced_to_screen_readers():
     assert len(announced) == 1 and "At risk" in announced[0]
 
 
-def test_offline_spanish_selection_is_explained_and_tagged_english():
-    at = _ask("ES")
-    assert any("Shown in English because live AI is off" in c.value for c in at.caption)
+def test_no_language_picker_for_now_and_answers_are_tagged_english():
+    at = _ask()
+    assert "coach_language" not in {s.key for s in at.selectbox}   # removed until offline answers are translated
     answer = next(m.value for m in at.markdown if "role='status'" in m.value and "pk-answer" in m.value)
     assert "lang='en'" in answer
+
+
+def test_voice_input_fills_the_chat_box_in_the_chosen_language_and_never_sends():
+    from app.agent_panel import _voice_input_html
+
+    html = _voice_input_html("es")
+    assert "SpeechRecognition" in html and '"es-US"' in html
+    assert "<svg" in html and 'aria-label="Speak your question"' in html     # mic icon with a spoken name
+    assert "innerHTML" not in html and ".click()" not in html and "submit" not in html.lower()
