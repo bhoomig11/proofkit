@@ -97,6 +97,7 @@ class CoachReply(_Strict):
     facts: list[str]
     used_fallback: bool
     disclaimer: str
+    inputs: dict[str, str] = Field(default_factory=dict, description="The validated tool arguments, for display only")
 
 
 def _day(d: date) -> str:
@@ -316,5 +317,8 @@ def ask_coach(question: str, *, member: Member, status: ProofKitStatus, llm: LLM
         used_fallback = True
 
     log.info("coach tool=%s fallback=%s", tool, used_fallback)
+    inputs = {k: (f"{v.normalize():f}" if isinstance(v, Decimal) else str(v))
+              for k, v in args.model_dump(exclude_none=True).items()
+              if not (isinstance(v, Decimal) and v == 0)}
     return CoachReply(tool=tool, answer=answer, facts=facts, used_fallback=used_fallback,
-                      disclaimer=status.disclaimer)
+                      disclaimer=status.disclaimer, inputs=inputs)

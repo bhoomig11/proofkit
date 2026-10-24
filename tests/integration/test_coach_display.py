@@ -51,3 +51,54 @@ def test_app_shows_coach_answer_in_the_wrapping_block():
     answers = [m.value for m in at.markdown if "pk-answer" in m.value]
     assert answers, "the coach answer should render in the wrapping block"
     assert "At risk" in answers[0] and "&#36;60" in answers[0]
+
+
+def test_coach_reply_carries_the_validated_inputs():
+    from proofkit.common.llm import FakeLLM
+    from proofkit.integration import ask_coach
+    from tests.integration.test_agent_panel import _context
+
+    c = _context("SYN-0004", FakeLLM({"coach_route": {"tool": "what_if",
+                                                      "args": {"month": "2027-02", "extra_income": "60"}}}))
+    reply = ask_coach("What if I earn $60 more?", member=c.member, status=c.status, llm=c.llm,
+                      wallet_rules=c.wallet_rules, today=c.today)
+    assert reply.inputs == {"month": "2027-02", "extra_income": "60"}
+
+
+def test_describe_inputs_is_plain_words():
+    from app.agent_panel import describe_inputs
+
+    assert describe_inputs("what_if", {"month": "2027-02", "extra_income": "60", "extra_hours": "10"}) == \
+        "Your what-if: +$60.00 income and +10 hours in February 2027"
+    assert describe_inputs("explain_month", {"month": "2027-01"}) == "Month asked about: January 2027"
+    assert describe_inputs("explain_status", {}) is None
+
+
+def _dev_what_if():
+    import pytest
+    pytest.importorskip("streamlit")
+    from pathlib import Path
+
+    from streamlit.testing.v1 import AppTest
+
+    at = AppTest.from_file(str(Path(__file__).resolve().parents[2] / "app" / "main.py"), default_timeout=60)
+    at.session_state["member_id"] = "SYN-0004"
+    at.run()
+    at.button(key="suggested-2").click().run()  # "What if I earn $60 more?"
+    return at
+
+
+def test_how_we_know_shows_inputs_and_hides_tech_details_by_default():
+    at = _dev_what_if()
+    assert not at.exception, at.exception
+    assert any(e.label == "How we know this" for e in at.expander)
+    page = " ".join(m.value for m in at.markdown) + " ".join(t.value for t in at.text)
+    assert "Your what-if: +&#36;60.00 income" in page
+    assert "Tool:" not in page
+
+
+def test_show_how_the_ai_works_reveals_tool_and_fallback():
+    at = _dev_what_if()
+    at.toggle(key="coach_show_tech").set_value(True).run()
+    texts = " ".join(t.value for t in at.text)
+    assert "Tool: what_if" in texts and "Answered by:" in texts

@@ -11,6 +11,7 @@ from proofkit.contracts import FindingsBundle, Member, ProofKitStatus
 from proofkit.integration import ask_coach
 from proofkit.wallet import WalletRules
 
+from app.format import format_money, month_long
 from app.highlight import escape_plain
 
 SUGGESTED_QUESTIONS = (
@@ -41,6 +42,7 @@ class ChatResult:
     facts: tuple[str, ...]
     used_fallback: bool
     disclaimer: str
+    inputs: tuple[tuple[str, str], ...] = ()
 
 
 class ChatBackend(Protocol):
@@ -71,7 +73,22 @@ class CoachBackend:
             facts=tuple(reply.facts),
             used_fallback=reply.used_fallback,
             disclaimer=reply.disclaimer,
+            inputs=tuple(reply.inputs.items()),
         )
+
+
+def describe_inputs(tool: str, inputs: dict[str, str]) -> str | None:
+    """Plain words for what the coach worked out, e.g. 'Your what-if: +$60.00 income in February 2027'."""
+    from decimal import Decimal
+
+    month = f" in {month_long(inputs['month'])}" if inputs.get("month") else ""
+    if tool == "what_if":
+        parts = ([f"+{format_money(Decimal(inputs['extra_income']))} income"] if inputs.get("extra_income") else []) \
+            + ([f"+{inputs['extra_hours']} hours"] if inputs.get("extra_hours") else [])
+        return f"Your what-if: {' and '.join(parts)}{month}" if parts else None
+    if tool == "explain_month" and inputs.get("month"):
+        return f"Month asked about: {month_long(inputs['month'])}"
+    return None
 
 
 # Characters Streamlit's markdown would act on: links, emphasis, code, headings, tables, and $...$ formulas.
@@ -120,6 +137,8 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
     st.caption("Ask about your status, proof, or next step. The coach cannot change your result.")
     language_label = st.selectbox("Answer language", tuple(LANGUAGE_OPTIONS), key="coach_language")
     plain = st.toggle("Plain language", value=True, key="coach_plain")
+    show_tech = st.toggle("Show how the AI works", value=False, key="coach_show_tech",
+                          help="Adds which read-only tool answered and whether live AI was used.")
     language = LANGUAGE_OPTIONS[language_label]
 
     if "chat_messages" not in st.session_state:
@@ -137,7 +156,7 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
         with st.chat_message("user"):
             st.text(question)
         with st.chat_message("assistant"):
-            _render_answer(result, language, components, st)
+            _render_answer(result, language, components, st, show_tech)
 
     question = suggested or st.chat_input("Ask Coverage Coach")
     if question:
@@ -160,16 +179,20 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
         st.rerun()
 
 
-def _render_answer(result: ChatResult, language: str, components: Any, st: Any) -> None:
-    """Render dynamic answer/facts as plain text and a transparent trace."""
+def _render_answer(result: ChatResult, language: str, components: Any, st: Any, show_tech: bool = False) -> None:
+    """Render the answer, then 'How we know this': inputs and verified facts; tech details only on request."""
     st.markdown(answer_html(result.answer), unsafe_allow_html=True)
-    with st.expander("Agent trace — how this answer was made"):
-        st.text(f"Tool: {result.tool}")
-        st.text("Arguments: validated inside the read-only coach")
-        st.text(f"Fallback used: {'yes' if result.used_fallback else 'no'}")
-        st.text("Verified facts:")
+    with st.expander("How we know this"):
+        described = describe_inputs(result.tool, dict(result.inputs))
+        if described:
+            st.markdown(answer_html(described), unsafe_allow_html=True)
+        st.caption("Checked by RenewRight's rules:")
         for fact in result.facts:
             st.markdown(answer_html(f"• {fact}"), unsafe_allow_html=True)
+        if show_tech:
+            st.text(f"Tool: {result.tool}")
+            st.text("Answered by: " + ("rules only (live AI off or not used)" if result.used_fallback
+                                       else "live AI wording over rule-checked facts"))
     if language == "ht":
         st.caption("Read aloud is unavailable: this browser may not have a Haitian Creole voice.")
     else:
