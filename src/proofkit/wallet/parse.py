@@ -11,6 +11,7 @@ the numbers in the record appear in the source_quote, and it validates against t
 from __future__ import annotations
 
 import csv
+import re
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -37,7 +38,9 @@ LLM_INSTRUCTIONS = (
 )
 DEFAULT_RULES_PATH = Path(__file__).resolve().parents[3] / "config" / "wallet_rules.json"
 CSV_CONFIDENCE = 1.0
-UNKNOWN_PLATFORM_CONFIDENCE = 0.5  # below min_record_confidence: kept for the audit trail, excluded and flagged
+UNVERIFIED_CONFIDENCE = 0.5  # below min_record_confidence: kept for the audit trail, excluded and flagged
+_MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
+           "November", "December")
 _CSV_COLUMNS = {
     "platform": ("platform",),
     "period_start": ("period_start",),
@@ -84,11 +87,21 @@ def _parse_text(doc: EarningsDocument, text: str, member_id: str, llm: LLMClient
             dropped += 1
             continue
         fields["quote"] = span.text  # the document's own characters, not the LLM's copy
+        if not (_date_in(text, fields["start"]) and _date_in(text, fields["end"])):
+            fields["confidence"] = min(fields["confidence"], UNVERIFIED_CONFIDENCE)
         rec = _record(doc, member_id, len(out), rules, **fields)
         if rec:
             out.append(rec)
     log.info("llm doc_id=%s kept=%d dropped=%d", doc.doc_id, len(out), dropped)
     return out
+
+
+def _date_in(text: str, d: date) -> bool:
+    """True if the document writes this date: 2027-02-01, 02/01/2027, 2/1/2027, Feb 1, 2027, February 1, 2027."""
+    month = _MONTHS[d.month - 1]
+    forms = (d.isoformat(), f"{d.month:02}/{d.day:02}/{d.year}", f"{d.month}/{d.day}/{d.year}",
+             f"{month[:3]} {d.day}, {d.year}", f"{month} {d.day}, {d.year}")
+    return any(re.search(rf"(?<!\d){re.escape(f)}(?!\d)", text, re.I) for f in forms)
 
 
 def _numbers_in_quote(income: Decimal, hours: Decimal | None, quote: str) -> bool:
@@ -122,7 +135,7 @@ def _llm_fields(item: object) -> dict | None:
 def _record(doc: EarningsDocument, member_id: str, i: int, rules: WalletRules, *, platform: str, start: date,
             end: date, hours: Decimal | None, income: Decimal, quote: str, confidence: float) -> EarningsRecord | None:
     if platform not in rules.known_platforms:
-        confidence = min(confidence, UNKNOWN_PLATFORM_CONFIDENCE)
+        confidence = min(confidence, UNVERIFIED_CONFIDENCE)
     try:
         return EarningsRecord(record_id=f"R-{doc.doc_id}-{i}", member_id=member_id, source_doc_id=doc.doc_id,
                               platform=platform, period_start=start, period_end=end, hours=hours,
