@@ -16,6 +16,7 @@ from proofkit.contracts import ClinicalNote, Finding, FindingsBundle, FindingSta
 from proofkit.extraction.ground import ground_quote
 from proofkit.extraction.normalize import normalize_icd10
 from proofkit.extraction.prompts import EXTRACTION_INSTRUCTIONS
+from proofkit.extraction.status import apply_backstop
 
 EXTRACTOR_VERSION = "p1a-0.1.0"
 
@@ -34,7 +35,7 @@ def _verify(note: ClinicalNote, raw: Any, tainted: list[tuple[int, int]]) -> dic
     if icd10 is None or span is None or overlaps_injection(span.start, span.end, tainted):
         return None
     try:
-        status = FindingStatus(raw.get("status"))
+        status = apply_backstop(FindingStatus(raw.get("status")), note.text, span.start, span.end)
     except ValueError:
         return None
     return {"condition": raw.get("condition"), "icd10": icd10, "status": status, "quote": span.text,
