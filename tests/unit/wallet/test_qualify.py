@@ -27,3 +27,17 @@ def test_february_proration_respects_leap_years(rules, start, end, feb, mar):
     y = start.year
     assert (months[f"{y}-02"].total_hours, months[f"{y}-02"].total_income) == (D(feb[0]), D(feb[1]))
     assert (months[f"{y}-03"].total_hours, months[f"{y}-03"].total_income) == (D(mar[0]), D(mar[1]))
+
+
+def dup(rid, doc, conf=0.95):
+    return EarningsRecord(record_id=rid, member_id="SYN-0001", source_doc_id=doc, platform="doordash",
+                          period_start=date(2027, 2, 1), period_end=date(2027, 2, 7), hours=D("10"),
+                          gross_income=D("100.00"), source_quote="q", confidence=conf)
+
+
+@pytest.mark.parametrize("records, hours", [
+    ([dup("r1", "d1"), dup("r2", "d1")], "20.00"),            # same doc: two real gigs, both count
+    ([dup("r1", "d1", conf=0.3), dup("r2", "d2")], "10.00"),  # low-confidence copy never suppresses the good one
+])
+def test_dedupe_only_across_docs_and_after_confidence_filter(rules, records, hours):
+    assert evaluate_months(records, rules)[0].total_hours == D(hours)

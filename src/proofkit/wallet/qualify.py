@@ -42,9 +42,21 @@ def _split_by_month(r: EarningsRecord) -> list[tuple[str, _Slice]]:
 def evaluate_months(records: list[EarningsRecord], rules: WalletRules) -> list[MonthlyCompliance]:
     """EarningsRecord[] -> MonthlyCompliance[] sorted by month. Pure."""
     by_month: dict[str, list[_Slice]] = {}
+    reasons: dict[str, list[str]] = {}
+    seen: dict[tuple, str] = {}  # (platform, period, hours, income) -> first source_doc_id
     for r in records:
+        low = r.confidence < rules.min_record_confidence
+        if not low:
+            key = (r.platform, r.period_start, r.period_end, r.hours, r.gross_income)
+            if seen.setdefault(key, r.source_doc_id) != r.source_doc_id:
+                continue  # same statement uploaded twice
         for month, s in _split_by_month(r):
-            by_month.setdefault(month, []).append(s)
+            by_month.setdefault(month, [])
+            if low:
+                reasons.setdefault(month, []).append(
+                    f"record {r.record_id} excluded: confidence {r.confidence} below {rules.min_record_confidence}")
+            else:
+                by_month[month].append(s)
 
     out = []
     for month, slices in sorted(by_month.items()):
@@ -62,5 +74,6 @@ def evaluate_months(records: list[EarningsRecord], rules: WalletRules) -> list[M
             shortfall_hours=_q(max(Decimal("0"), rules.monthly_hours_required - hours)),
             shortfall_income=_q(max(Decimal("0"), rules.monthly_income_required - income)),
             record_ids=[s.record_id for s in slices],
+            needs_review=month in reasons, review_reasons=reasons.get(month, []),
         ))
     return out
