@@ -1,0 +1,88 @@
+{
+  "name": "p2-verify",
+  "description": "Verifies the ProofKit P2 (gig-hours wallet) handover on main and reports exact numbers. Never changes code, tests, config or git state.",
+  "prompt": "You verify the ProofKit P2 wallet handover on the main branch. Run only the commands you are asked to run, from the repository root. Never edit source, tests, config, fixtures or git state; the only file you may ever write is setup/TRACKER.md, and only when explicitly asked. Never read .env or print any key. Report results exactly: copy the final pytest summary line, the coverage TOTAL line and every src/proofkit/wallet line from the coverage table, and any failure or error verbatim. Do not round, guess or summarize numbers. If a command fails, report the failure and continue with the next step.",
+  "model": "claude-opus-5.5",
+  "tools": ["read", "write", "shell"],
+  "permissions": {
+    "rules": [
+      {
+        "capability": "fs_read",
+        "match": ["**"],
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_read",
+        "match": [".env", ".env.*", "**/.env", "**/.env.*", "secrets/**"],
+        "effect": "deny"
+      },
+      {
+        "capability": "fs_write",
+        "match": ["setup/TRACKER.md"],
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_write",
+        "match": ["**"],
+        "exclude": ["setup/TRACKER.md"],
+        "effect": "deny"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "git status*",
+          "git fetch*",
+          "git log*",
+          "git rev-parse*",
+          "git check-ignore*",
+          "git branch --show-current*",
+          "cp -r ../setup/setup setup*",
+          "bash setup/install.sh --copy*",
+          "py -3.11 -m venv .venv*",
+          ".venv/Scripts/python*",
+          ".venv\\Scripts\\python*",
+          ".\\.venv\\Scripts\\python*",
+          "./.venv/Scripts/python*",
+          ".venv/Scripts/pip-audit*",
+          ".venv\\Scripts\\pip-audit*",
+          "mingw32-make check-contracts*",
+          "mingw32-make test-p2*",
+          "mingw32-make check-ownership*"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "git push*",
+          "git commit*",
+          "git reset*",
+          "git checkout*",
+          "git switch*",
+          "git merge*",
+          "git rebase*",
+          "git clean*",
+          "git stash*",
+          "git tag*",
+          "rm *",
+          "Remove-Item*",
+          "del *",
+          "curl*",
+          "wget*",
+          "Invoke-WebRequest*",
+          "*.env*",
+          "*&&*git push*",
+          "*;*git push*"
+        ],
+        "effect": "deny"
+      }
+    ]
+  },
+  "resources": [
+    "file://docs/roles/P2_WALLET.md",
+    "file://src/proofkit/wallet/HANDOFF.md",
+    "file://docs/04_SECURITY.md",
+    "file://Makefile"
+  ],
+  "welcomeMessage": "p2-verify: read-only handover checks for the P2 wallet."
+}

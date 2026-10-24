@@ -1,0 +1,23 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "ownership-check-on-stop",
+      "trigger": "Stop",
+      "action": {
+        "type": "command",
+        "command": "python scripts/check_ownership.py"
+      },
+      "timeout": 60
+    },
+    {
+      "name": "secret-scan-on-stop",
+      "trigger": "Stop",
+      "action": {
+        "type": "command",
+        "command": "python scripts/scan_secrets.py"
+      },
+      "timeout": 60
+    }
+  ]
+}
