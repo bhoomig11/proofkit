@@ -1,0 +1,23 @@
+{
+  "_why": "expected overall status per member at demo_today",
+  "SYN-0001": {
+    "status": "protected",
+    "protected_by": "exemption:medically_frail"
+  },
+  "SYN-0002": {
+    "status": "protected",
+    "protected_by": "compliance:hours"
+  },
+  "SYN-0003": {
+    "status": "protected",
+    "protected_by": "exemption:medically_frail"
+  },
+  "SYN-0004": {
+    "status": "at_risk",
+    "protected_by": null
+  },
+  "SYN-0005": {
+    "status": "at_risk",
+    "protected_by": null
+  }
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "record_id": "R-D-0005-dd-feb-0",
+    "member_id": "SYN-0005",
+    "source_doc_id": "D-0005-dd-feb",
+    "platform": "doordash",
+    "period_start": "2027-02-01",
+    "period_end": "2027-02-28",
+    "hours": "30.00",
+    "gross_income": "410.00",
+    "source_quote": "Active time: 30 hr 0 min\nTotal earnings: $410.00",
+    "confidence": 0.95
+  }
+]

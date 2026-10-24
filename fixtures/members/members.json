@@ -1,0 +1,40 @@
+{
+  "demo_today": "2027-03-01",
+  "members": [
+    {
+      "member_id": "SYN-0001",
+      "display_name": "Maria (synthetic)",
+      "renewal_date": "2027-03-20",
+      "phone_last4": "0101",
+      "eligibility_group": "expansion_adult"
+    },
+    {
+      "member_id": "SYN-0002",
+      "display_name": "James (synthetic)",
+      "renewal_date": "2027-03-20",
+      "phone_last4": "0202",
+      "eligibility_group": "expansion_adult"
+    },
+    {
+      "member_id": "SYN-0003",
+      "display_name": "Priya (synthetic)",
+      "renewal_date": "2027-03-20",
+      "phone_last4": "0303",
+      "eligibility_group": "expansion_adult"
+    },
+    {
+      "member_id": "SYN-0004",
+      "display_name": "Dev (synthetic)",
+      "renewal_date": "2027-03-20",
+      "phone_last4": "0404",
+      "eligibility_group": "expansion_adult"
+    },
+    {
+      "member_id": "SYN-0005",
+      "display_name": "Adversarial (synthetic)",
+      "renewal_date": "2027-03-20",
+      "phone_last4": "0505",
+      "eligibility_group": "expansion_adult"
+    }
+  ]
+}

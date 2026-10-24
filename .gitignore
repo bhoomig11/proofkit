@@ -1,0 +1,25 @@
+.env
+.env.local
+.env.production
+secrets/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+eval/results/
+uploads/
+*.generated.json
+.DS_Store
+
+# Claude Code config: lives in setup/ (shared outside git), placed by setup/install.sh
+setup/
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+.claude
+*.bak
+*.bak.*
+.ruff_cache/

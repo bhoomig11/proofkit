@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.1
+    hooks:
+      - id: ruff
+  - repo: local
+    hooks:
+      - id: contract-lock
+        name: contract lock
+        entry: python scripts/contract_lock.py
+        language: system
+        pass_filenames: false
+      - id: ownership
+        name: ownership boundaries
+        entry: python scripts/check_ownership.py
+        language: system
+        pass_filenames: false
+      - id: phi-scan
+        name: secret/PHI scan
+        entry: python scripts/scan_secrets.py
+        language: system
+        pass_filenames: false

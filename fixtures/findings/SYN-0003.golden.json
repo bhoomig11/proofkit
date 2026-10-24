@@ -1,0 +1,35 @@
+{
+  "member_id": "SYN-0003",
+  "notes_processed": [
+    "N-0003-a",
+    "N-0003-b"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0003-a-0",
+      "note_id": "N-0003-a",
+      "note_date": "2026-09-15",
+      "condition": "Major depressive disorder, recurrent, severe without psychotic features",
+      "icd10": "F33.2",
+      "status": "current",
+      "quote": "Major depressive disorder, recurrent, severe without psychotic features",
+      "quote_start": 37,
+      "quote_end": 108,
+      "confidence": 0.95
+    },
+    {
+      "finding_id": "F-N-0003-b-0",
+      "note_id": "N-0003-b",
+      "note_date": "2024-05-01",
+      "condition": "Post-traumatic stress disorder",
+      "icd10": "F43.10",
+      "status": "historical",
+      "quote": "history of PTSD after car accident, symptoms resolved",
+      "quote_start": 18,
+      "quote_end": 71,
+      "confidence": 0.85
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

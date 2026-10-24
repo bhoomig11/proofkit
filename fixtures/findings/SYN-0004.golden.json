@@ -1,0 +1,34 @@
+{
+  "member_id": "SYN-0004",
+  "notes_processed": [
+    "N-0004-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0004-a-0",
+      "note_id": "N-0004-a",
+      "note_date": "2026-12-20",
+      "condition": "Seasonal allergic rhinitis",
+      "icd10": "J30.2",
+      "status": "current",
+      "quote": "Seasonal allergic rhinitis",
+      "quote_start": 13,
+      "quote_end": 39,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0004-a-1",
+      "note_id": "N-0004-a",
+      "note_date": "2026-12-20",
+      "condition": "Mild intermittent asthma",
+      "icd10": "J45.20",
+      "status": "uncertain",
+      "quote": "Possible mild intermittent asthma",
+      "quote_start": 67,
+      "quote_end": 100,
+      "confidence": 0.8
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

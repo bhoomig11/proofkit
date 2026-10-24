@@ -1,0 +1,26 @@
+{
+  "_owner": "P1B",
+  "_note": "SEED rule set for the hackathon demo. Every entry marked verify=true must be checked against MassHealth/CMS guidance before any real use. Conditions are matched by ICD-10 prefix on findings with status=current.",
+  "rules_version": "seed-2026-10-24",
+  "lookback_months": {"value": 12, "verify": true, "why": "CHCS (Apr 2026): lookback is the most significant parameter; federal rule leaves it to states"},
+  "min_finding_confidence": 0.6,
+  "review_band": {"low": 0.6, "high": 0.8, "why": "matches with confidence in [low, high) go to clinician review"},
+  "counted_statuses": ["current"],
+  "review_statuses": ["uncertain"],
+  "rules": [
+    {"rule_id": "MF-MH-01", "category": "disabling_mental_disorder", "exemption_type": "medically_frail", "label": "Schizophrenia spectrum", "icd10_prefixes": ["F20", "F25"], "verify": true},
+    {"rule_id": "MF-MH-02", "category": "disabling_mental_disorder", "exemption_type": "medically_frail", "label": "Bipolar disorder", "icd10_prefixes": ["F31"], "verify": true},
+    {"rule_id": "MF-MH-03", "category": "disabling_mental_disorder", "exemption_type": "medically_frail", "label": "Major depressive disorder, severe or recurrent", "icd10_prefixes": ["F32.2", "F32.3", "F33.1", "F33.2", "F33.3"], "verify": true},
+    {"rule_id": "MF-MH-04", "category": "disabling_mental_disorder", "exemption_type": "medically_frail", "label": "PTSD", "icd10_prefixes": ["F43.1"], "verify": true},
+    {"rule_id": "MF-SUD-01", "category": "substance_use_disorder", "exemption_type": "medically_frail", "label": "Substance use disorder (moderate or severe / dependence)", "icd10_prefixes": ["F10.2", "F11.2", "F12.2", "F13.2", "F14.2", "F15.2", "F16.2", "F19.2"], "verify": true},
+    {"rule_id": "MF-AI-01", "category": "serious_complex_medical", "exemption_type": "medically_frail", "label": "Systemic lupus erythematosus", "icd10_prefixes": ["M32"], "verify": true},
+    {"rule_id": "MF-AI-02", "category": "serious_complex_medical", "exemption_type": "medically_frail", "label": "Rheumatoid arthritis", "icd10_prefixes": ["M05", "M06"], "verify": true},
+    {"rule_id": "MF-AI-03", "category": "serious_complex_medical", "exemption_type": "medically_frail", "label": "Multiple sclerosis", "icd10_prefixes": ["G35"], "verify": true},
+    {"rule_id": "MF-CV-01", "category": "serious_complex_medical", "exemption_type": "medically_frail", "label": "Heart failure", "icd10_prefixes": ["I50"], "verify": true},
+    {"rule_id": "MF-RN-01", "category": "serious_complex_medical", "exemption_type": "medically_frail", "label": "CKD stage 4-5 / ESRD", "icd10_prefixes": ["N18.4", "N18.5", "N18.6"], "verify": true},
+    {"rule_id": "MF-ON-01", "category": "serious_complex_medical", "exemption_type": "medically_frail", "label": "Active malignancy (seed: lung, breast, colon, leukemia, lymphoma)", "icd10_prefixes": ["C34", "C50", "C18", "C91", "C92", "C81", "C83"], "verify": true},
+    {"rule_id": "MF-ID-01", "category": "serious_complex_medical", "exemption_type": "medically_frail", "label": "HIV disease", "icd10_prefixes": ["B20"], "verify": true},
+    {"rule_id": "MF-DD-01", "category": "physical_intellectual_developmental_disability", "exemption_type": "medically_frail", "label": "Intellectual disability / cerebral palsy", "icd10_prefixes": ["F70", "F71", "F72", "F73", "G80"], "verify": true},
+    {"rule_id": "MF-BL-01", "category": "blind_or_disabled", "exemption_type": "medically_frail", "label": "Blindness", "icd10_prefixes": ["H54.0", "H54.1"], "verify": true}
+  ]
+}

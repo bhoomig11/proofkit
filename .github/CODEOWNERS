@@ -1,0 +1,7 @@
+# Replace @handles with your GitHub usernames
+/src/proofkit/extraction/   @p1a-handle
+/src/proofkit/reasoning/    @p1b-handle
+/eval/                      @p1b-handle
+/src/proofkit/wallet/       @p2-handle
+/src/proofkit/contracts/    @p1a-handle @p1b-handle @p2-handle
+/src/proofkit/common/       @p1a-handle @p1b-handle @p2-handle

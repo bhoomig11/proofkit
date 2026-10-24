@@ -1,0 +1,59 @@
+{
+  "member_id": "SYN-0002",
+  "notes_processed": [
+    "N-0002-a",
+    "N-0002-b"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0002-a-0",
+      "note_id": "N-0002-a",
+      "note_date": "2026-12-02",
+      "condition": "Depression",
+      "icd10": "F32.A",
+      "status": "negated",
+      "quote": "denies depression",
+      "quote_start": 53,
+      "quote_end": 70,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0002-a-1",
+      "note_id": "N-0002-a",
+      "note_date": "2026-12-02",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "ruled_out",
+      "quote": "R/o CHF",
+      "quote_start": 165,
+      "quote_end": 172,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0002-a-2",
+      "note_id": "N-0002-a",
+      "note_date": "2026-12-02",
+      "condition": "Dyspnea",
+      "icd10": "R06.09",
+      "status": "current",
+      "quote": "dyspnea on exertion",
+      "quote_start": 121,
+      "quote_end": 140,
+      "confidence": 0.8
+    },
+    {
+      "finding_id": "F-N-0002-b-0",
+      "note_id": "N-0002-b",
+      "note_date": "2027-01-10",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "ruled_out",
+      "quote": "Heart failure ruled out",
+      "quote_start": 63,
+      "quote_end": 86,
+      "confidence": 0.95
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

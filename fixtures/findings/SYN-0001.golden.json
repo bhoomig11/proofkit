@@ -1,0 +1,71 @@
+{
+  "member_id": "SYN-0001",
+  "notes_processed": [
+    "N-0001-a",
+    "N-0001-b"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0001-a-0",
+      "note_id": "N-0001-a",
+      "note_date": "2026-11-10",
+      "condition": "Systemic lupus erythematosus with glomerular disease",
+      "icd10": "M32.14",
+      "status": "current",
+      "quote": "Systemic lupus erythematosus with lupus nephritis, active flare",
+      "quote_start": 167,
+      "quote_end": 230,
+      "confidence": 0.95
+    },
+    {
+      "finding_id": "F-N-0001-a-1",
+      "note_id": "N-0001-a",
+      "note_date": "2026-11-10",
+      "condition": "Chest pain",
+      "icd10": "R07.9",
+      "status": "negated",
+      "quote": "Denies chest pain",
+      "quote_start": 83,
+      "quote_end": 100,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0001-a-2",
+      "note_id": "N-0001-a",
+      "note_date": "2026-11-10",
+      "condition": "Rheumatoid arthritis",
+      "icd10": "M06.9",
+      "status": "family_history",
+      "quote": "mother with rheumatoid arthritis",
+      "quote_start": 113,
+      "quote_end": 145,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0001-b-0",
+      "note_id": "N-0001-b",
+      "note_date": "2027-01-05",
+      "condition": "Iron deficiency anemia",
+      "icd10": "D50.9",
+      "status": "historical",
+      "quote": "hx of iron deficiency anemia, resolved 2024",
+      "quote_start": 24,
+      "quote_end": 67,
+      "confidence": 0.85
+    },
+    {
+      "finding_id": "F-N-0001-b-1",
+      "note_id": "N-0001-b",
+      "note_date": "2027-01-05",
+      "condition": "Systemic lupus erythematosus",
+      "icd10": "M32.9",
+      "status": "current",
+      "quote": "SLE followed by rheum",
+      "quote_start": 69,
+      "quote_end": 90,
+      "confidence": 0.8
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

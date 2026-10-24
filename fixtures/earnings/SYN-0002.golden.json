@@ -1,0 +1,14 @@
+[
+  {
+    "record_id": "R-D-0002-uber-feb-0",
+    "member_id": "SYN-0002",
+    "source_doc_id": "D-0002-uber-feb",
+    "platform": "uber",
+    "period_start": "2027-02-01",
+    "period_end": "2027-02-28",
+    "hours": "92.50",
+    "gross_income": "1592.00",
+    "source_quote": "Online hours 92.5\nGross fares 1,480.00 USD\nTips 112.00 USD\nTotal earnings 1,592.00 USD",
+    "confidence": 0.95
+  }
+]

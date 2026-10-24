@@ -1,0 +1,26 @@
+[
+  {
+    "record_id": "R-D-0004-tr-feb-0",
+    "member_id": "SYN-0004",
+    "source_doc_id": "D-0004-tr-feb",
+    "platform": "taskrabbit",
+    "period_start": "2027-02-01",
+    "period_end": "2027-02-28",
+    "hours": "18.00",
+    "gross_income": "340.00",
+    "source_quote": "Hours invoiced: 18\nEarnings: $340.00",
+    "confidence": 0.95
+  },
+  {
+    "record_id": "R-D-0004-uw-feb-0",
+    "member_id": "SYN-0004",
+    "source_doc_id": "D-0004-uw-feb",
+    "platform": "upwork",
+    "period_start": "2027-02-01",
+    "period_end": "2027-02-28",
+    "hours": null,
+    "gross_income": "180.00",
+    "source_quote": "Fixed-price milestone paid 02/14/2027: $180.00",
+    "confidence": 0.95
+  }
+]

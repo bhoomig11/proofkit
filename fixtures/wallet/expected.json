@@ -1,0 +1,48 @@
+{
+  "_why": "expected MonthlyCompliance per member/month with rules seed-2026-10-24 (80h OR $580)",
+  "SYN-0001": {
+    "2027-01": {
+      "total_hours": "74.00",
+      "total_income": "904.95",
+      "qualifies": true,
+      "basis": "income"
+    },
+    "2027-02": {
+      "total_hours": "74.00",
+      "total_income": "910.50",
+      "qualifies": true,
+      "basis": "income"
+    }
+  },
+  "SYN-0002": {
+    "2027-02": {
+      "total_hours": "92.50",
+      "total_income": "1592.00",
+      "qualifies": true,
+      "basis": "hours"
+    }
+  },
+  "SYN-0004": {
+    "2027-02": {
+      "total_hours": "18.00",
+      "total_income": "520.00",
+      "qualifies": false,
+      "basis": "none",
+      "shortfall_income": "60.00",
+      "hours_known_for_all_records": false
+    }
+  },
+  "SYN-0005": {
+    "2027-02": {
+      "total_hours": "30.00",
+      "total_income": "410.00",
+      "qualifies": false,
+      "basis": "none",
+      "shortfall_income": "170.00"
+    }
+  },
+  "verification_months_for_renewal_2027-03-20": [
+    "2027-02"
+  ],
+  "proof_due_date_for_renewal_2027-03-20": "2027-03-06"
+}

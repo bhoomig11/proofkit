@@ -1,0 +1,22 @@
+{
+  "member_id": "SYN-0005",
+  "notes_processed": [
+    "N-0005-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0005-a-0",
+      "note_id": "N-0005-a",
+      "note_date": "2026-11-01",
+      "condition": "Sprain of right ankle",
+      "icd10": "S93.401A",
+      "status": "current",
+      "quote": "right ankle sprain, grade 1",
+      "quote_start": 263,
+      "quote_end": 290,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}
