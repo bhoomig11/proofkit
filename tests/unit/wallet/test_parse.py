@@ -5,13 +5,19 @@ from decimal import Decimal as D
 import pytest
 
 from proofkit.common.llm import FakeLLM, LLMError
-from proofkit.contracts import EarningsDocument
+from proofkit.contracts import DocumentType, EarningsDocument
 from proofkit.wallet import load_wallet_rules, parse_documents
 
 
 @pytest.fixture
 def rules(wallet_rules_path):
     return load_wallet_rules(wallet_rules_path)
+
+
+@pytest.fixture
+def pdf_rules(rules):
+    """PDF is off in config until pypdf is patched; these tests exercise the pdf path itself."""
+    return rules.model_copy(update={"allowed_doc_types": rules.allowed_doc_types | {DocumentType.PDF}})
 
 
 def csv_doc(text, doc_id="c1"):
@@ -146,10 +152,10 @@ def b64_doc(data: bytes, doc_type="pdf", doc_id="p1"):
                             content_b64=base64.b64encode(data).decode())
 
 
-def test_pdf_text_extracted_in_memory_then_grounded(rules):
+def test_pdf_text_extracted_in_memory_then_grounded(pdf_rules):
     doc = b64_doc(pdf_bytes("Uber statement 02/01/2027 to 02/28/2027\nOnline hours 92.5\nGross fares 1,480.00 USD"))
     llm = llm_one(source_quote="Online hours 92.5 Gross fares 1,480.00 USD")
-    (r,) = parse_documents([doc], "SYN-0001", llm, rules=rules)
+    (r,) = parse_documents([doc], "SYN-0001", llm, rules=pdf_rules)
     assert (r.source_doc_id, r.hours, r.gross_income) == ("p1", D("92.5"), D("1480.00"))
     assert "Online hours 92.5" in llm.calls[0]["user"]
 
@@ -161,9 +167,9 @@ def test_pdf_text_extracted_in_memory_then_grounded(rules):
     EarningsDocument(doc_id="p1", member_id="SYN-0001", filename="x.pdf", doc_type="pdf", content_text="text"),
     b64_doc(b"\xff\xfe not utf-8", doc_type="text"),
 ])
-def test_bad_uploads_rejected(rules, doc):
+def test_bad_uploads_rejected(pdf_rules, doc):
     with pytest.raises(ValueError):
-        parse_documents([doc], "SYN-0001", FakeLLM({}), rules=rules)
+        parse_documents([doc], "SYN-0001", FakeLLM({}), rules=pdf_rules)
 
 
 def test_disallowed_type_rejected(rules):
@@ -210,9 +216,9 @@ def test_no_wallet_code_touches_filename():
     lambda: b64_doc(b"a" * 501, doc_type="image"),
     lambda: b64_doc(pdf_bytes("x" * 300)),  # valid pdf, just too big
 ])
-def test_size_limit_applies_to_valid_content(rules, make):
+def test_size_limit_applies_to_valid_content(pdf_rules, make):
     doc = make()
-    small = rules.model_copy(update={"max_bytes": 500})
+    small = pdf_rules.model_copy(update={"max_bytes": 500})
     with pytest.raises(ValueError, match="larger than|bad text upload"):
         parse_documents([doc], "SYN-0001", llm_one(), rules=small)
 
@@ -240,3 +246,10 @@ def test_platform_names_normalised(rules, platform, want):
     text = f"platform,period_start,period_end,hours,gross_pay\n{platform},2027-02-01,2027-02-28,30,410.00\n"
     (r,) = parse_documents([csv_doc(text)], "SYN-0001", FakeLLM({}), rules=rules)
     assert r.platform == want
+
+
+def test_pdf_uploads_off_while_pinned_pypdf_has_known_cves(rules):
+    """pip-audit: pypdf < 6.21.2 has decompression-bomb and parser CVEs. Re-enable pdf in config after the bump."""
+    import pypdf
+    if tuple(int(x) for x in pypdf.__version__.split(".")[:3]) < (6, 21, 2):
+        assert "pdf" not in rules.allowed_doc_types
