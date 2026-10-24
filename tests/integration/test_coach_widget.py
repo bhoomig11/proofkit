@@ -97,11 +97,11 @@ def test_suggestions_stay_on_top_after_a_question():
 def test_settings_survive_minimizing_the_chat():
     at = signed_in()
     at.button(key="coach_open_btn").click().run()
-    at.toggle(key="coach_plain").set_value(False).run()
+    at.toggle(key="coach_show_tech").set_value(True).run()
     at.button(key="coach_min_btn").click().run()
     at.button(key="coach_open_btn").click().run()
     assert not at.exception, at.exception
-    assert at.toggle(key="coach_plain").value is False
+    assert at.toggle(key="coach_show_tech").value is True
     assert not at.warning                                # no "default value and Session State" warning
 
 
@@ -113,3 +113,10 @@ def test_dock_script_only_moves_focus_and_scroll():
     assert "innerHTML" not in script and "fetch(" not in script and "textContent" not in script
     with pytest.raises(ValueError):
         dock_script("'); alert(1); ('", 0)
+
+
+def test_settings_only_offer_how_the_ai_works():
+    at = signed_in()
+    at.button(key="coach_open_btn").click().run()
+    toggles = {t.key for t in at.toggle}
+    assert "coach_show_tech" in toggles and "coach_plain" not in toggles   # answers are always plain language

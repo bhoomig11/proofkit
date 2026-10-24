@@ -55,4 +55,5 @@ def test_voice_input_fills_the_chat_box_in_the_chosen_language_and_never_sends()
 
     html = _voice_input_html("es")
     assert "SpeechRecognition" in html and '"es-US"' in html
+    assert "<svg" in html and 'aria-label="Speak your question"' in html     # mic icon with a spoken name
     assert "innerHTML" not in html and ".click()" not in html and "submit" not in html.lower()

@@ -129,29 +129,35 @@ def _voice_input_html(language: str) -> str:
     It never sends by itself. Chrome's recognizer sends the audio to Google to transcribe it."""
     tag = _safe_json_string(VOICE_TAGS[language])
     return f"""<!doctype html><html><body style="margin:0;background:transparent;font-family:sans-serif">
-<button id="mic" aria-label="Speak your question" aria-pressed="false"
- style="min-height:44px;padding:4px 10px;border:0;background:transparent;color:#5032C8;
- font-size:14px;font-weight:600;text-decoration:underline;cursor:pointer">&#127908; Speak</button>
-<span id="note" role="status" style="font-size:13px;color:#888"></span>
+<button id="mic" aria-label="Speak your question" title="Speak your question" aria-pressed="false"
+ style="width:44px;height:44px;padding:0;border:0;border-radius:50%;background:transparent;color:#888;cursor:pointer">
+<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path
+ d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/>
+</svg></button>
+<span id="note" role="status" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)"></span>
 <script>
 const language={tag}; const button=document.getElementById('mic'); const note=document.getElementById('note');
 const host=window.parent; const Recognition=host.SpeechRecognition || host.webkitSpeechRecognition;
-try {{ const accent = host.getComputedStyle(host.document.documentElement)
-  .getPropertyValue('--pk-accent').trim(); if (accent) button.style.color = accent; }} catch (e) {{}}
-if (!Recognition) {{ button.disabled = true; note.textContent = 'Voice input needs Chrome, Edge or Safari.'; }}
+let idle = '#888', active = '#5032C8';
+try {{ const css = host.getComputedStyle(host.document.documentElement);
+  idle = css.getPropertyValue('--pk-text').trim() || idle; active = css.getPropertyValue('--pk-accent').trim() || active;
+}} catch (e) {{}}
+button.style.color = idle;
+function say(words) {{ note.textContent = words; button.title = words; }}
+if (!Recognition) {{ button.disabled = true; button.style.opacity = '.4'; say('Voice input needs Chrome, Edge or Safari.'); }}
 button.addEventListener('click', () => {{
   const box = host.document.querySelector('.st-key-coach_panel textarea');
   if (!box || !Recognition) return;
   const listen = new Recognition(); listen.lang = language; listen.interimResults = false;
-  listen.onstart = () => {{ button.setAttribute('aria-pressed','true'); note.textContent = 'Listening...'; }};
-  listen.onerror = () => {{ note.textContent = 'Sorry, I could not hear that. Try again, or type.'; }};
-  listen.onend = () => {{ button.setAttribute('aria-pressed','false'); }};
+  listen.onstart = () => {{ button.setAttribute('aria-pressed','true'); button.style.color = active; say('Listening...'); }};
+  listen.onerror = () => {{ say('Sorry, I could not hear that. Try again, or type.'); }};
+  listen.onend = () => {{ button.setAttribute('aria-pressed','false'); button.style.color = idle; }};
   listen.onresult = (event) => {{
     // React owns the box's value: set it through the native setter, then tell React it changed.
     const setValue = Object.getOwnPropertyDescriptor(host.HTMLTextAreaElement.prototype, 'value').set;
     setValue.call(box, event.results[0][0].transcript);
     box.dispatchEvent(new host.Event('input', {{bubbles: true}}));
-    box.focus(); note.textContent = 'Check the words, then press Enter.';
+    box.focus(); say('Check the words, then press Enter.');
   }};
   listen.start();
 }});
@@ -189,7 +195,6 @@ def render_settings() -> None:
     """Chat settings, shown behind the gear in the coach header. Values live in session state by key."""
     import streamlit as st
 
-    st.toggle("Plain language", key="coach_plain")
     st.toggle("Show how the AI works", key="coach_show_tech",
               help="Adds which read-only tool answered and whether live AI was used.")
 
@@ -206,7 +211,7 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
 
     coach = backend or CoachBackend()
     language = "en"  # shortcut: language picker removed until offline answers are translated; restore it then
-    plain = bool(st.session_state.get("coach_plain", True))
+    plain = True  # answers are always plain language
     show_tech = bool(st.session_state.get("coach_show_tech", False))
 
     if "chat_messages" not in st.session_state:
@@ -249,11 +254,12 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
             with st.chat_message("assistant"):
                 _render_answer(result, language, components, st, show_tech, announce=index == len(messages) - 1)
 
-    if language in VOICE_TAGS:
-        components.html(_voice_input_html(language), height=44)
-    else:
-        st.caption("Voice input is unavailable: browsers have no Haitian Creole speech recognition.")
-    st.chat_input("Write a message...", key=INPUT_KEY, on_submit=_queue_typed)
+    with st.container(key="coach_compose"):
+        box, mic = st.columns([8, 1], vertical_alignment="center")
+        with box:
+            st.chat_input("Write a message...", key=INPUT_KEY, on_submit=_queue_typed)
+        with mic:
+            components.html(_voice_input_html(language), height=44)
 
 
 def _queue(question: str) -> None:
