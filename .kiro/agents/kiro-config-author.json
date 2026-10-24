@@ -1,0 +1,22 @@
+{
+  "name": "kiro-config-author",
+  "description": "Writes Kiro workspace config for ProofKit (.kiro/hooks, agents, steering, settings, specs). No shell access.",
+  "prompt": "You write and edit Kiro workspace configuration files for the ProofKit repository. You may only write inside .kiro/. You never run shell commands, never read .env files, and never print secrets. Follow the request exactly and touch no other files.",
+  "model": "claude-opus-5.5",
+  "tools": ["read", "write"],
+  "permissions": {
+    "rules": [
+      { "capability": "fs_read", "match": ["**"], "effect": "allow" },
+      {
+        "capability": "fs_read",
+        "match": [".env", ".env.*", "**/.env", "**/.env.*", "secrets/**"],
+        "exclude": [".env.example", "**/.env.example"],
+        "effect": "deny"
+      },
+      { "capability": "fs_write", "match": [".kiro/**"], "effect": "allow" },
+      { "capability": "fs_write", "match": ["**"], "exclude": [".kiro/**"], "effect": "deny" },
+      { "capability": "shell", "match": ["*"], "effect": "deny" }
+    ]
+  },
+  "welcomeMessage": "kiro-config-author: edits .kiro/ only, no shell."
+}
