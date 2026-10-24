@@ -33,9 +33,12 @@ fileMatchPattern: "{src/proofkit/integration/**,app/**,tests/integration/**}"
 - Test that the packet HTML contains it.
 
 ## SMS reminder
-- At most 160 characters, printable ASCII only (0x20-0x7E).
-- First name only, plus the deadline or next action. Never a last name, member_id, condition, ICD-10 code, income or note text.
-- Test long first names and non-ASCII names: truncate or fall back to a generic greeting, never exceed 160.
+- Length and charset: at most 160 characters, every character printable ASCII (0x20-0x7E). No newlines, tabs or other control characters.
+- Greeting: the member's first name only: the first word of `display_name`, ignoring a trailing `(...)` suffix, folded to ASCII (NFKD, drop non-ASCII) and cut to 20 characters. Use it only if it then looks like a name: it matches `^[A-Za-z][A-Za-z'-]*$` (letters, with apostrophes or hyphens after the first letter) and is not a program name (MassHealth, Medicaid). Otherwise use the literal fallback `there` ("Hi there").
+- Content allowed: the greeting, the status in plain words, the next action, and the deadline (`next_deadline` / `proof_due_date`).
+- Income shortfall (product decision, Karthik): for AT_RISK members only, the SMS may include the dollar income shortfall, formatted from the `Decimal` as `$` plus two decimals, rounded half-up (for example "$60.00 short"). It is not health information. PROTECTED and NEEDS_REVIEW messages never include a dollar amount.
+- Never include: a condition, an ICD-10 code, an exemption type, a program name (such as MassHealth or Medicaid), the member_id, any phone digits, a last name, or any note or document text (quotes, `source_quote`, platforms). No other income figures (gross income, monthly totals) and no hours.
+- Tests: names at the boundaries (José becomes Jose; a 21-character name is cut to 20; empty, `<script>`, digits, `SYN-0004`, phone digits and program names fall back to `there`); all 5 personas stay at most 160 characters and printable ASCII; SYN-0004 contains "$60.00 short"; PROTECTED and NEEDS_REVIEW contain no `$`; no persona's SMS contains its member_id, last name, condition, ICD-10 code, exemption type, "MassHealth" or text from its notes or documents.
 
 ## Uploads
 - Caps come from `config/wallet_rules.json`. Process files in memory, never written to disk by name.
