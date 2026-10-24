@@ -96,3 +96,22 @@ def test_kept_quote_is_the_documents_own_text(rules):
     (r,) = parse_documents([text_doc()], "SYN-0001", llm_one(source_quote="Online hours 92.5 Gross fares 1,480.00 USD"),
                            rules=rules)
     assert r.source_quote == "Online hours 92.5\nGross fares 1,480.00 USD"
+
+
+DATED = "Uber statement 02/01/2027 to 02/28/2027\nOnline hours 92.5\nGross fares 1,480.00 USD\n"
+WORDY = "DoorDash summary\nPeriod: Feb 1, 2027 - Feb 28, 2027\nActive time: 30 hr 0 min\nTotal earnings: $410.00\n"
+
+
+@pytest.mark.parametrize("text, quote, start, end, trusted", [
+    (DATED, "Online hours 92.5\nGross fares 1,480.00 USD", "2027-02-01", "2027-02-28", True),
+    (DATED, "Online hours 92.5\nGross fares 1,480.00 USD", "2027-03-01", "2027-03-31", False),  # month moved
+    (WORDY, "Active time: 30 hr 0 min\nTotal earnings: $410.00", "2027-02-01", "2027-02-28", True),
+    (WORDY, "Active time: 30 hr 0 min\nTotal earnings: $410.00", "2026-02-01", "2026-02-28", False),  # year moved
+])
+def test_period_dates_must_be_in_the_document(rules, text, quote, start, end, trusted):
+    hours = "92.5" if "92.5" in quote else "30"
+    income = "1480.00" if "1,480" in quote else "410.00"
+    llm = llm_one(source_quote=quote, period_start=start, period_end=end, hours=hours, gross_income=income)
+    doc = EarningsDocument(doc_id="t1", member_id="SYN-0001", filename="u.txt", doc_type="text", content_text=text)
+    (r,) = parse_documents([doc], "SYN-0001", llm, rules=rules)
+    assert (r.confidence >= rules.min_record_confidence) is trusted
