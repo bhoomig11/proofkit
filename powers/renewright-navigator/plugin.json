@@ -1,0 +1,18 @@
+{
+  "$schema": "https://agentplugins.dev/schemas/1.0.0/plugin.schema.json",
+  "name": "renewright-navigator",
+  "version": "1.0.0",
+  "description": "Navigator triage for RenewRight: lists synthetic MassHealth members, reports PROTECTED / NEEDS_REVIEW / AT_RISK statuses, proof deadlines and monthly shortfalls, and drafts SMS reminders through a read-only, offline MCP server. Organizes evidence only; MassHealth makes all eligibility determinations.",
+  "author": {
+    "name": "RenewRight team"
+  },
+  "keywords": [
+    "renewright",
+    "masshealth",
+    "medicaid work requirements",
+    "navigator",
+    "coverage triage"
+  ],
+  "repository": "https://github.com/bhoomig11/renewright",
+  "license": "MIT"
+}

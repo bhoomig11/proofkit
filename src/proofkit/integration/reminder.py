@@ -9,7 +9,7 @@ import re
 import unicodedata
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, localcontext
-from typing import Optional
+from typing import NamedTuple, Optional
 
 from proofkit.contracts import Member, OverallStatus, ProofKitStatus
 
@@ -18,7 +18,6 @@ __all__ = ["sms_reminder"]
 SMS_LIMIT = 160
 _FIRST_NAME_MAX = 20
 _FALLBACK_NAME = "there"
-_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 _SUFFIX = re.compile(r"\s*\([^()]*\)\s*$")
 _NAME_SHAPE = re.compile(r"[A-Za-z][A-Za-z'-]*")
 _PROGRAM_NAMES = frozenset({"masshealth", "medicaid"})
@@ -26,6 +25,77 @@ _CENT = Decimal("0.01")
 
 # (text, required) pairs; optional clauses are dropped first when the message is too long.
 Clause = tuple[str, bool]
+
+
+class _Templates(NamedTuple):
+    """Fixed, ASCII-only wording for one language. ``{...}`` slots take only dates and money."""
+
+    greeting: str
+    months: tuple[str, ...]
+    date_fmt: str  # slots: {mon}, {day}, {year}
+    by_due: str  # slot: {date}; used when a deadline is known
+    on_track: str
+    no_action: str
+    next_renewal: str  # slot: {date}
+    signature: str
+    review: str
+    contact: str
+    need_proof: str
+    send_proof: str
+    short: str  # slots: {amount}, {month}
+    stop: str
+
+
+_TEMPLATES: dict[str, _Templates] = {
+    "en": _Templates(
+        greeting="Hi {name},",
+        months=("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+        date_fmt="{mon} {day}, {year}",
+        by_due=" by {date}.",
+        on_track=" you're on track.",
+        no_action=" No action needed now.",
+        next_renewal=" Next renewal: {date}.",
+        signature=" -ProofKit",
+        review=" Part of your proof needs a review.",
+        contact=" Contact your navigator or clinic",
+        need_proof=" We still need proof of your work hours or income.",
+        send_proof=" Send pay stubs or volunteer hours",
+        short=" You're {amount} short for {month}.",
+        stop=" Reply STOP to opt out.",
+    ),
+    "es": _Templates(
+        greeting="Hola {name},",
+        months=("ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"),
+        date_fmt="{day} {mon} {year}",
+        by_due=" antes del {date}.",
+        on_track=" vas bien.",
+        no_action=" No necesitas hacer nada ahora.",
+        next_renewal=" Proxima renovacion: {date}.",
+        signature=" -ProofKit",
+        review=" Parte de tu prueba necesita revision.",
+        contact=" Contacta a tu navegador o clinica",
+        need_proof=" Aun necesitamos prueba de tus horas de trabajo o ingresos.",
+        send_proof=" Envia talones de pago u horas de voluntariado",
+        short=" Te faltan {amount} para {month}.",
+        stop=" Responde STOP para cancelar.",
+    ),
+    "pt": _Templates(
+        greeting="Ola {name},",
+        months=("jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"),
+        date_fmt="{day} {mon} {year}",
+        by_due=" ate {date}.",
+        on_track=" voce esta em dia.",
+        no_action=" Nenhuma acao necessaria agora.",
+        next_renewal=" Proxima renovacao: {date}.",
+        signature=" -ProofKit",
+        review=" Parte da sua prova precisa de revisao.",
+        contact=" Fale com seu navegador ou clinica",
+        need_proof=" Ainda precisamos de prova das suas horas de trabalho ou renda.",
+        send_proof=" Envie holerites ou horas de voluntariado",
+        short=" Faltam {amount} para {month}.",
+        stop=" Responda STOP para sair.",
+    ),
+}
 
 
 def _first_name(display_name: str) -> str:
@@ -43,15 +113,15 @@ def _first_name(display_name: str) -> str:
     return folded
 
 
-def _fmt_date(d: date) -> str:
-    """R7: 'Mar 6, 2027', locale-free, no zero padding."""
-    return f"{_MONTHS[d.month - 1]} {d.day}, {d.year}"
+def _fmt_date(d: date, t: _Templates) -> str:
+    """R7: locale-free, no zero padding ('Mar 6, 2027' in en, '6 mar 2027' in es/pt)."""
+    return t.date_fmt.format(mon=t.months[d.month - 1], day=d.day, year=d.year)
 
 
-def _fmt_month(month: str) -> str:
-    """'2027-02' -> 'Feb 2027'."""
+def _fmt_month(month: str, t: _Templates) -> str:
+    """'2027-02' -> 'Feb 2027' (en) / 'feb 2027' (es) / 'fev 2027' (pt)."""
     year, mon = month.split("-")
-    return f"{_MONTHS[int(mon) - 1]} {year}"
+    return f"{t.months[int(mon) - 1]} {year}"
 
 
 def _fmt_money(x: Decimal) -> str:
@@ -99,36 +169,36 @@ def _shortfall(status: ProofKitStatus) -> Optional[tuple[str, Decimal]]:
     return None
 
 
-def _by_due(due: Optional[date]) -> str:
-    return f" by {_fmt_date(due)}." if due is not None else "."
+def _by_due(due: Optional[date], t: _Templates) -> str:
+    return t.by_due.format(date=_fmt_date(due, t)) if due is not None else "."
 
 
-def _clauses(member: Member, status: ProofKitStatus) -> list[Clause]:
-    """R5: fixed template clauses for the member's overall status."""
+def _clauses(member: Member, status: ProofKitStatus, t: _Templates) -> list[Clause]:
+    """R5: fixed template clauses for the member's overall status, in language ``t``."""
     if status.status == OverallStatus.PROTECTED:
         return [
-            (" you're on track.", True),
-            (" No action needed now.", True),
-            (f" Next renewal: {_fmt_date(_renewal(member, status))}.", True),
-            (" -ProofKit", False),
+            (t.on_track, True),
+            (t.no_action, True),
+            (t.next_renewal.format(date=_fmt_date(_renewal(member, status), t)), True),
+            (t.signature, False),
         ]
     due = _due(status)
     if status.status == OverallStatus.NEEDS_REVIEW:
         return [
-            (" Part of your proof needs a review.", True),
-            (" Contact your navigator or clinic" + _by_due(due), True),
+            (t.review, True),
+            (t.contact + _by_due(due, t), True),
         ]
     short = _shortfall(status)
     if short is None:
         return [
-            (" We still need proof of your work hours or income.", True),
-            (" Send pay stubs or volunteer hours" + _by_due(due), True),
+            (t.need_proof, True),
+            (t.send_proof + _by_due(due, t), True),
         ]
     month, amount = short
     return [
-        (f" You're {_fmt_money(amount)} short for {_fmt_month(month)}.", True),
-        (" Send pay stubs or volunteer hours" + _by_due(due), True),
-        (" Reply STOP to opt out.", False),
+        (t.short.format(amount=_fmt_money(amount), month=_fmt_month(month, t)), True),
+        (t.send_proof + _by_due(due, t), True),
+        (t.stop, False),
     ]
 
 
@@ -148,16 +218,25 @@ def _fit(greeting: str, clauses: list[Clause]) -> str:
     return msg
 
 
-def sms_reminder(member: Member, status: ProofKitStatus) -> str:
-    """Build one SMS (<= 160 printable ASCII chars) for a member.
+def sms_reminder(member: Member, status: ProofKitStatus, lang: str = "en") -> str:
+    """Build one SMS (<= 160 printable ASCII chars) for a member in English, Spanish or Portuguese.
 
     Takes the contract models ``Member`` and ``ProofKitStatus`` and returns a plain ``str``.
+    ``lang`` is exactly ``"en"`` (default), ``"es"`` or ``"pt"``; anything else raises ``ValueError``.
     Reads only the display name's first token, status, dates and the first failing verification
     month's income shortfall; never ids, phone digits, exemption details, findings or action text.
     Raises ``ValueError`` before rendering if the status, wallet or exemption belongs to another member.
+
+    The Spanish and Portuguese wording is deliberately ASCII-only (no accents, n-tilde or c-cedilla).
+    A single character outside the GSM-7 alphabet (for example a-acute or c-cedilla) forces the whole
+    message into UCS-2, which cuts one SMS segment from 160 to 70 characters, so the reminder would
+    split into several segments or be truncated. Plain ASCII keeps every language in one 160-char SMS.
     """
+    if not isinstance(lang, str) or lang not in _TEMPLATES:
+        raise ValueError(f"unsupported lang {lang!r}; expected one of {sorted(_TEMPLATES)}")
     _check_member_ids(member, status)
-    greeting = f"Hi {_first_name(member.display_name)},"
-    msg = _fit(greeting, _clauses(member, status))
+    t = _TEMPLATES[lang]
+    greeting = t.greeting.format(name=_first_name(member.display_name))
+    msg = _fit(greeting, _clauses(member, status, t))
     assert all(" " <= c <= "~" for c in msg)
     return msg

@@ -1,0 +1,64 @@
+{
+  "name": "navigator",
+  "description": "Read-only RenewRight navigator assistant. Triages synthetic members through the renewright MCP tools and reports statuses, deadlines, shortfalls and drafted SMS reminders. Never edits files or runs commands.",
+  "prompt": "You are a RenewRight navigator assistant for clinic and community health staff. Use only the renewright MCP tools. Report statuses, deadlines, shortfalls and drafted SMS reminders exactly as the tools return them. Never make or imply an eligibility determination: RenewRight organizes evidence; MassHealth makes all eligibility determinations. Use first names only and never invent data.",
+  "model": "claude-opus-5.5",
+  "tools": [
+    "read",
+    "@renewright"
+  ],
+  "includeMcpJson": false,
+  "permissions": {
+    "rules": [
+      {
+        "capability": "mcp",
+        "match": [
+          "renewright",
+          "renewright/*",
+          "@renewright",
+          "@renewright/*"
+        ],
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_read",
+        "match": [
+          ".env",
+          ".env.*",
+          "**/.env",
+          "**/.env.*",
+          "secrets/**"
+        ],
+        "exclude": [
+          ".env.example",
+          "**/.env.example"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "fs_write",
+        "match": [
+          "**"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "shell",
+        "match": [
+          "*"
+        ],
+        "effect": "deny"
+      }
+    ]
+  },
+  "welcomeMessage": "navigator: ask for a triage, a member's status (SYN-####), their wallet months or an SMS reminder. Read-only, synthetic data.",
+  "mcpServers": {
+    "renewright": {
+      "command": "python",
+      "args": [
+        ".kiro/mcp/renewright.py"
+      ],
+      "env": {}
+    }
+  }
+}
