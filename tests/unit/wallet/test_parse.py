@@ -3,7 +3,7 @@ from decimal import Decimal as D
 
 import pytest
 
-from proofkit.common.llm import FakeLLM
+from proofkit.common.llm import FakeLLM, LLMError
 from proofkit.contracts import EarningsDocument
 from proofkit.wallet import load_wallet_rules, parse_documents
 
@@ -56,3 +56,24 @@ def test_unknown_platform_kept_with_confidence_below_threshold(rules):
     text = "platform,period_start,period_end,hours,gross_pay\nShadyGigs,2027-02-01,2027-02-07,10,100.00\n"
     (r,) = parse_documents([csv_doc(text)], "SYN-0001", FakeLLM({}), rules=rules)
     assert r.platform == "shadygigs" and r.confidence < rules.min_record_confidence
+
+
+def text_doc(text="Uber Feb 2027\nOnline hours 92.5\nGross fares 1,480.00 USD\n"):
+    return EarningsDocument(doc_id="t1", member_id="SYN-0001", filename="u.txt", doc_type="text", content_text=text)
+
+
+def _fail(instructions, untrusted):
+    raise LLMError("bad json")
+
+
+@pytest.mark.parametrize("response", [
+    _fail,
+    ["not", "a", "dict"],
+    {"records": "nope"},
+    {"records": ["nope", 3, None]},
+    {"records": [{"platform": "uber"}]},  # missing fields
+    {"records": [{"platform": ["uber"], "period_start": "2027-02-01", "period_end": "2027-02-28", "hours": "92.5",
+                  "gross_income": "1480.00", "source_quote": "Online hours 92.5", "confidence": "high"}]},
+])
+def test_llm_failure_or_garbage_gives_no_records(rules, response):
+    assert parse_documents([text_doc()], "SYN-0001", FakeLLM({"extract_earnings": response}), rules=rules) == []
