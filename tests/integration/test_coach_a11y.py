@@ -49,3 +49,11 @@ def test_offline_spanish_selection_is_explained_and_tagged_english():
     assert any("Shown in English because live AI is off" in c.value for c in at.caption)
     answer = next(m.value for m in at.markdown if "role='status'" in m.value and "pk-answer" in m.value)
     assert "lang='en'" in answer
+
+
+def test_voice_input_fills_the_chat_box_in_the_chosen_language_and_never_sends():
+    from app.agent_panel import _voice_input_html
+
+    html = _voice_input_html("es")
+    assert "SpeechRecognition" in html and '"es-US"' in html
+    assert "innerHTML" not in html and ".click()" not in html and "submit" not in html.lower()

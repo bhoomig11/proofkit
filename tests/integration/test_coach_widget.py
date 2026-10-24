@@ -85,13 +85,13 @@ def test_minimize_keeps_the_conversation_and_close_clears_it():
     assert len(at.chat_message) == 1                     # close: fresh chat, only the greeting
 
 
-def test_suggestions_show_until_the_first_question():
+def test_suggestions_stay_on_top_after_a_question():
     at = signed_in()
     at.button(key="coach_open_btn").click().run()
     assert {f"suggested-{i}" for i in range(4)} <= keys(at)
     assert any("Ask about your status" in m.value for m in at.markdown)   # greeting before any question
     at.button(key="suggested-0").click().run()
-    assert not any(k.startswith("suggested-") for k in keys(at))
+    assert {f"suggested-{i}" for i in range(4)} <= keys(at)              # still there for the next question
 
 
 def test_settings_survive_minimizing_the_chat():

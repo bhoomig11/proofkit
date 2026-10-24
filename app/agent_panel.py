@@ -21,6 +21,7 @@ SUGGESTED_QUESTIONS = (
     "What should I do next?",
 )
 LANGUAGE_OPTIONS = {"EN": "en", "ES": "es", "PT": "pt", "HT": "ht"}
+VOICE_TAGS = {"en": "en-US", "es": "es-US", "pt": "pt-BR"}  # browsers have no Haitian Creole voice or recognizer
 PENDING_KEY = "coach_pending"  # a chip or typed question waiting to be answered on the next run
 INPUT_KEY = "coach_input"
 
@@ -123,11 +124,44 @@ def _safe_json_string(value: str) -> str:
     return json.dumps(value).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
 
 
+def _voice_input_html(language: str) -> str:
+    """A mic button: the browser turns speech into text and puts it in the chat box for the member to check.
+    It never sends by itself. Chrome's recognizer sends the audio to Google to transcribe it."""
+    tag = _safe_json_string(VOICE_TAGS[language])
+    return f"""<!doctype html><html><body style="margin:0;background:transparent;font-family:sans-serif">
+<button id="mic" aria-label="Speak your question" aria-pressed="false"
+ style="min-height:44px;padding:4px 10px;border:0;background:transparent;color:#5032C8;
+ font-size:14px;font-weight:600;text-decoration:underline;cursor:pointer">&#127908; Speak</button>
+<span id="note" role="status" style="font-size:13px;color:#888"></span>
+<script>
+const language={tag}; const button=document.getElementById('mic'); const note=document.getElementById('note');
+const host=window.parent; const Recognition=host.SpeechRecognition || host.webkitSpeechRecognition;
+try {{ const accent = host.getComputedStyle(host.document.documentElement)
+  .getPropertyValue('--pk-accent').trim(); if (accent) button.style.color = accent; }} catch (e) {{}}
+if (!Recognition) {{ button.disabled = true; note.textContent = 'Voice input needs Chrome, Edge or Safari.'; }}
+button.addEventListener('click', () => {{
+  const box = host.document.querySelector('.st-key-coach_panel textarea');
+  if (!box || !Recognition) return;
+  const listen = new Recognition(); listen.lang = language; listen.interimResults = false;
+  listen.onstart = () => {{ button.setAttribute('aria-pressed','true'); note.textContent = 'Listening...'; }};
+  listen.onerror = () => {{ note.textContent = 'Sorry, I could not hear that. Try again, or type.'; }};
+  listen.onend = () => {{ button.setAttribute('aria-pressed','false'); }};
+  listen.onresult = (event) => {{
+    // React owns the box's value: set it through the native setter, then tell React it changed.
+    const setValue = Object.getOwnPropertyDescriptor(host.HTMLTextAreaElement.prototype, 'value').set;
+    setValue.call(box, event.results[0][0].transcript);
+    box.dispatchEvent(new host.Event('input', {{bubbles: true}}));
+    box.focus(); note.textContent = 'Check the words, then press Enter.';
+  }};
+  listen.start();
+}});
+</script></body></html>"""
+
+
 def _read_aloud_html(answer: str, language: str) -> str:
     """A compact read-aloud control. Pressing it again while speaking stops the voice."""
-    language_tags = {"en": "en-US", "es": "es-US", "pt": "pt-BR"}
     text = _safe_json_string(answer)
-    tag = _safe_json_string(language_tags[language])
+    tag = _safe_json_string(VOICE_TAGS[language])
     return f"""<!doctype html><html><body style="margin:0;background:transparent;font-family:sans-serif">
 <button id="speak" aria-label="Read this answer aloud" aria-pressed="false"
  style="min-height:44px;padding:4px 10px;border:0;background:transparent;color:#5032C8;
@@ -202,19 +236,24 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
             st.error(str(exc))
     messages = st.session_state.chat_messages
 
+    with st.container(key="coach_suggestions"):  # above the messages, so they stay in view for every question
+        for index, label in enumerate(SUGGESTED_QUESTIONS):
+            st.button(label, key=f"suggested-{index}", on_click=_queue, args=(label,))
+
     with st.container(height=chat_height, border=False, key="coach_messages"):
         if not messages:
             with st.chat_message("assistant"):
                 st.markdown(answer_html(welcome_message(view.member)), unsafe_allow_html=True)
-            with st.container(key="coach_suggestions"):
-                for index, label in enumerate(SUGGESTED_QUESTIONS):
-                    st.button(label, key=f"suggested-{index}", on_click=_queue, args=(label,))
         for index, (asked, result) in enumerate(messages):
             with st.chat_message("user"):
                 st.markdown(answer_html(asked), unsafe_allow_html=True)
             with st.chat_message("assistant"):
                 _render_answer(result, language, components, st, show_tech, announce=index == len(messages) - 1)
 
+    if language in VOICE_TAGS:
+        components.html(_voice_input_html(language), height=44)
+    else:
+        st.caption("Voice input is unavailable: browsers have no Haitian Creole speech recognition.")
     st.chat_input("Write a message...", key=INPUT_KEY, on_submit=_queue_typed)
 
 
