@@ -1,0 +1,34 @@
+{
+  "member_id": "SYN-0043",
+  "notes_processed": [
+    "N-0043-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0043-a-0",
+      "note_id": "N-0043-a",
+      "note_date": "2026-05-29",
+      "condition": "Shortness of breath",
+      "icd10": "R06.02",
+      "status": "negated",
+      "quote": "No shortness of breath",
+      "quote_start": 194,
+      "quote_end": 216,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0043-a-1",
+      "note_id": "N-0043-a",
+      "note_date": "2026-05-29",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1066,
+      "quote_end": 1077,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

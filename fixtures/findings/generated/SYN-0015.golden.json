@@ -1,0 +1,34 @@
+{
+  "member_id": "SYN-0015",
+  "notes_processed": [
+    "N-0015-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0015-a-0",
+      "note_id": "N-0015-a",
+      "note_date": "2026-09-18",
+      "condition": "Chest pain",
+      "icd10": "R07.9",
+      "status": "negated",
+      "quote": "Denies chest pain",
+      "quote_start": 576,
+      "quote_end": 593,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0015-a-1",
+      "note_id": "N-0015-a",
+      "note_date": "2026-09-18",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "current",
+      "quote": "Chronic congestive heart failure",
+      "quote_start": 1092,
+      "quote_end": 1124,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

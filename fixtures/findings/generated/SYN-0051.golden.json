@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0051",
+  "notes_processed": [
+    "N-0051-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0051-a-0",
+      "note_id": "N-0051-a",
+      "note_date": "2026-05-11",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "family_history",
+      "quote": "Father with heart failure",
+      "quote_start": 402,
+      "quote_end": 427,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0051-a-1",
+      "note_id": "N-0051-a",
+      "note_date": "2026-05-11",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "ruled_out",
+      "quote": "R/o CHF",
+      "quote_start": 973,
+      "quote_end": 980,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0051-a-2",
+      "note_id": "N-0051-a",
+      "note_date": "2026-05-11",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1179,
+      "quote_end": 1190,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0051-a-3",
+      "note_id": "N-0051-a",
+      "note_date": "2026-05-11",
+      "condition": "Anemia",
+      "icd10": "D64.9",
+      "status": "current",
+      "quote": "Anemia",
+      "quote_start": 1310,
+      "quote_end": 1316,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

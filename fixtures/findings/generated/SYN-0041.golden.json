@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0041",
+  "notes_processed": [
+    "N-0041-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0041-a-0",
+      "note_id": "N-0041-a",
+      "note_date": "2026-06-18",
+      "condition": "Depression",
+      "icd10": "F32.A",
+      "status": "negated",
+      "quote": "denies depression",
+      "quote_start": 335,
+      "quote_end": 352,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0041-a-1",
+      "note_id": "N-0041-a",
+      "note_date": "2026-06-18",
+      "condition": "Chronic kidney disease, stage 2",
+      "icd10": "N18.2",
+      "status": "current",
+      "quote": "Chronic kidney disease stage 2",
+      "quote_start": 1107,
+      "quote_end": 1137,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0041-a-2",
+      "note_id": "N-0041-a",
+      "note_date": "2026-06-18",
+      "condition": "Systemic lupus erythematosus",
+      "icd10": "M32.9",
+      "status": "ruled_out",
+      "quote": "Rule out lupus",
+      "quote_start": 1297,
+      "quote_end": 1311,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0041-a-3",
+      "note_id": "N-0041-a",
+      "note_date": "2026-06-18",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1502,
+      "quote_end": 1513,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

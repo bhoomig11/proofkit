@@ -1,0 +1,46 @@
+{
+  "member_id": "SYN-0014",
+  "notes_processed": [
+    "N-0014-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0014-a-0",
+      "note_id": "N-0014-a",
+      "note_date": "2026-10-17",
+      "condition": "Schizophrenia",
+      "icd10": "F20.9",
+      "status": "family_history",
+      "quote": "Sister with schizophrenia",
+      "quote_start": 534,
+      "quote_end": 559,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0014-a-1",
+      "note_id": "N-0014-a",
+      "note_date": "2026-10-17",
+      "condition": "Chronic kidney disease, stage 4",
+      "icd10": "N18.4",
+      "status": "current",
+      "quote": "Chronic kidney disease stage 4",
+      "quote_start": 1175,
+      "quote_end": 1205,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0014-a-2",
+      "note_id": "N-0014-a",
+      "note_date": "2026-10-17",
+      "condition": "Opioid abuse",
+      "icd10": "F11.10",
+      "status": "current",
+      "quote": "Opioid abuse, uncomplicated",
+      "quote_start": 1467,
+      "quote_end": 1494,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

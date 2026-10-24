@@ -1,0 +1,82 @@
+{
+  "member_id": "SYN-0023",
+  "notes_processed": [
+    "N-0023-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0023-a-0",
+      "note_id": "N-0023-a",
+      "note_date": "2026-06-29",
+      "condition": "Depression",
+      "icd10": "F32.A",
+      "status": "negated",
+      "quote": "denies depression",
+      "quote_start": 443,
+      "quote_end": 460,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0023-a-1",
+      "note_id": "N-0023-a",
+      "note_date": "2026-06-29",
+      "condition": "Shortness of breath",
+      "icd10": "R06.02",
+      "status": "negated",
+      "quote": "No shortness of breath",
+      "quote_start": 462,
+      "quote_end": 484,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0023-a-2",
+      "note_id": "N-0023-a",
+      "note_date": "2026-06-29",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 1170,
+      "quote_end": 1192,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0023-a-3",
+      "note_id": "N-0023-a",
+      "note_date": "2026-06-29",
+      "condition": "Chronic kidney disease, stage 4",
+      "icd10": "N18.4",
+      "status": "historical",
+      "quote": "History of chronic kidney disease stage 4, resolved after kidney transplant",
+      "quote_start": 1345,
+      "quote_end": 1420,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0023-a-4",
+      "note_id": "N-0023-a",
+      "note_date": "2026-06-29",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1537,
+      "quote_end": 1548,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0023-a-5",
+      "note_id": "N-0023-a",
+      "note_date": "2026-06-29",
+      "condition": "Bipolar disorder",
+      "icd10": "F31.9",
+      "status": "uncertain",
+      "quote": "Concern for bipolar disorder",
+      "quote_start": 1670,
+      "quote_end": 1698,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

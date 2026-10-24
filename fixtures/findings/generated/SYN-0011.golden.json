@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0011",
+  "notes_processed": [
+    "N-0011-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0011-a-0",
+      "note_id": "N-0011-a",
+      "note_date": "2026-08-16",
+      "condition": "Depression",
+      "icd10": "F32.A",
+      "status": "negated",
+      "quote": "denies depression",
+      "quote_start": 515,
+      "quote_end": 532,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0011-a-1",
+      "note_id": "N-0011-a",
+      "note_date": "2026-08-16",
+      "condition": "Cerebral palsy",
+      "icd10": "G80.9",
+      "status": "current",
+      "quote": "Cerebral palsy",
+      "quote_start": 1105,
+      "quote_end": 1119,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0011-a-2",
+      "note_id": "N-0011-a",
+      "note_date": "2026-08-16",
+      "condition": "Asthma",
+      "icd10": "J45.909",
+      "status": "current",
+      "quote": "Asthma, uncomplicated",
+      "quote_start": 1331,
+      "quote_end": 1352,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0011-a-3",
+      "note_id": "N-0011-a",
+      "note_date": "2026-08-16",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1548,
+      "quote_end": 1559,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}
