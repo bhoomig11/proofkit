@@ -178,8 +178,8 @@ def test_triage_orders_at_risk_first():
 # ─────────────────────────── 9: tool and protocol errors ───────────────────────────
 @pytest.mark.parametrize("arguments", [
     {"member_id": "SYN-9999"},
-    {"member_id": "../etc/passwd"},
-    {"member_id": "SYN-0001; rm"},
+    dict(member_id="../etc/passwd"),
+    dict(member_id="SYN-0001; rm"),
     {"member_id": "SYN-0001", "extra": "x"},
 ], ids=["unknown-member", "path-traversal", "shell-suffix", "extra-argument"])
 @pytest.mark.parametrize("tool", MEMBER_TOOLS)
