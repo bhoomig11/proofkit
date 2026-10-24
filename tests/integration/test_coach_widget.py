@@ -60,3 +60,58 @@ def test_typed_question_gets_an_answer_and_cannot_change_status():
 def test_widget_is_positioned_by_static_css():
     assert ".st-key-coach_launcher{position:fixed" in WIDGET_CSS
     assert ".st-key-coach_panel{position:fixed" in WIDGET_CSS
+
+
+def test_dock_is_anchored_bottom_right_and_never_pushes_the_page():
+    launcher = WIDGET_CSS.split(".st-key-coach_launcher{", 1)[1].split("}", 1)[0]
+    panel = WIDGET_CSS.split(".st-key-coach_panel{", 1)[1].split("}", 1)[0]
+    for rule in (launcher, panel):
+        assert "bottom:0" in rule and "right:" in rule
+    assert ":has(.st-key-coach_panel)" not in WIDGET_CSS   # nothing reflows the dashboard when the chat opens
+
+
+def test_minimize_keeps_the_conversation_and_close_clears_it():
+    at = signed_in()
+    at.button(key="coach_open_btn").click().run()
+    at.button(key="suggested-0").click().run()
+    asked = len(at.chat_message)
+    at.button(key="coach_min_btn").click().run()
+    assert not at.exception, at.exception
+    assert "coach_open_btn" in keys(at) and not at.chat_input
+    at.button(key="coach_open_btn").click().run()
+    assert len(at.chat_message) == asked                 # minimize: same conversation when reopened
+    at.button(key="coach_close_btn").click().run()
+    at.button(key="coach_open_btn").click().run()
+    assert len(at.chat_message) == 1                     # close: fresh chat, only the greeting
+
+
+def test_suggestions_show_until_the_first_question():
+    at = signed_in()
+    at.button(key="coach_open_btn").click().run()
+    assert {f"suggested-{i}" for i in range(4)} <= keys(at)
+    assert any("Ask about your status" in m.value for m in at.markdown)   # greeting before any question
+    at.button(key="suggested-0").click().run()
+    assert not any(k.startswith("suggested-") for k in keys(at))
+
+
+def test_settings_survive_minimizing_the_chat():
+    at = signed_in()
+    at.button(key="coach_open_btn").click().run()
+    at.selectbox(key="coach_language").set_value("ES").run()
+    at.toggle(key="coach_plain").set_value(False).run()
+    at.button(key="coach_min_btn").click().run()
+    at.button(key="coach_open_btn").click().run()
+    assert not at.exception, at.exception
+    assert at.selectbox(key="coach_language").value == "ES"
+    assert at.toggle(key="coach_plain").value is False
+    assert not at.warning                                # no "default value and Session State" warning
+
+
+def test_dock_script_only_moves_focus_and_scroll():
+    from app.coach_widget import dock_script
+
+    script = dock_script("open", 3)
+    assert "focus()" in script and "scrollTop" in script and "Escape" in script
+    assert "innerHTML" not in script and "fetch(" not in script and "textContent" not in script
+    with pytest.raises(ValueError):
+        dock_script("'); alert(1); ('", 0)
