@@ -5,6 +5,8 @@ Live output varies run to run, so these check only what grounding guarantees plu
 """
 import json
 import os
+import time
+import urllib.error
 import urllib.request
 from decimal import Decimal
 
@@ -28,12 +30,16 @@ class GroqClient:
         req = urllib.request.Request("https://api.groq.com/openai/v1/chat/completions", data=json.dumps(body).encode(),
                                      headers={"Authorization": f"Bearer {self.key}", "Content-Type": "application/json",
                                               "User-Agent": "proofkit-live-test"})
-        try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                text = json.load(resp)["choices"][0]["message"]["content"]
-        except OSError as e:  # HTTP and network errors: same failure type as the real client
-            raise LLMError(f"groq call failed: {type(e).__name__}") from e
-        return parse_json_response(text)
+        for attempt in range(3):
+            try:
+                with urllib.request.urlopen(req, timeout=60) as resp:
+                    return parse_json_response(json.load(resp)["choices"][0]["message"]["content"])
+            except urllib.error.HTTPError as e:  # free tier is 8k tokens/min: wait out a 429, then retry
+                if e.code != 429 or attempt == 2:
+                    raise LLMError(f"groq call failed: HTTP {e.code}") from e
+                time.sleep(min(float(e.headers.get("retry-after") or 30), 65))
+            except OSError as e:  # network errors: same failure type as the real client
+                raise LLMError(f"groq call failed: {type(e).__name__}") from e
 
 
 @pytest.fixture
