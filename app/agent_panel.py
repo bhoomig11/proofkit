@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Any, Protocol
 
+from pydantic import ValidationError
+
 from proofkit.common.llm import LLMClient
 from proofkit.contracts import FindingsBundle, Member, ProofKitStatus
 from proofkit.integration import ask_coach, welcome_message
@@ -16,7 +18,6 @@ from app.highlight import escape_plain
 
 SUGGESTED_QUESTIONS = (
     "Am I covered?",
-    "Why?",
     "What if I earn $60 more?",
     "What should I do next?",
 )
@@ -236,7 +237,9 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
         )
         try:
             st.session_state.chat_messages.append((question, coach.ask(question, context)))
-        except ValueError as exc:
+        except ValidationError:  # an internal error (e.g. stale cached data after a code reload): never show it
+            st.error("Sorry, I couldn't answer that just now. Please try again.")
+        except ValueError as exc:  # the coach's own member-safe messages, e.g. a question that is too long
             st.error(str(exc))
     messages = st.session_state.chat_messages
 

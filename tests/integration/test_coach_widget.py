@@ -88,10 +88,10 @@ def test_minimize_keeps_the_conversation_and_close_clears_it():
 def test_suggestions_stay_on_top_after_a_question():
     at = signed_in()
     at.button(key="coach_open_btn").click().run()
-    assert {f"suggested-{i}" for i in range(4)} <= keys(at)
+    assert {f"suggested-{i}" for i in range(3)} <= keys(at)
     assert any("Ask about your status" in m.value for m in at.markdown)   # greeting before any question
     at.button(key="suggested-0").click().run()
-    assert {f"suggested-{i}" for i in range(4)} <= keys(at)              # still there for the next question
+    assert {f"suggested-{i}" for i in range(3)} <= keys(at)              # still there for the next question
 
 
 def test_settings_survive_minimizing_the_chat():
@@ -120,3 +120,10 @@ def test_settings_only_offer_how_the_ai_works():
     at.button(key="coach_open_btn").click().run()
     toggles = {t.key for t in at.toggle}
     assert "coach_show_tech" in toggles and "coach_plain" not in toggles   # answers are always plain language
+
+
+def test_suggestions_are_the_three_questions_with_useful_answers():
+    at = signed_in()
+    at.button(key="coach_open_btn").click().run()
+    labels = [b.label for b in at.button if b.key and b.key.startswith("suggested-")]
+    assert labels == ["Am I covered?", "What if I earn $60 more?", "What should I do next?"]
