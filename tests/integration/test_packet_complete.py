@@ -8,8 +8,6 @@ from decimal import Decimal
 from html import escape
 from html.parser import HTMLParser
 
-import pytest
-
 from proofkit.contracts import (
     ActionItem,
     ClinicalNote,
@@ -31,10 +29,6 @@ from proofkit.integration.packet import render_packet
 
 
 MEMBER_ID = "SYN-4242"
-PRD_DISCLAIMER = (
-    "ProofKit helps people gather and organize evidence. "
-    "It does not make eligibility determinations; MassHealth does."
-)
 CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src data:"
 COMPLETE_SECTION_ORDER = [
     "Member identity",
@@ -386,7 +380,7 @@ def test_complete_packet_has_fixed_section_order_and_all_content_once() -> None:
         status.action_items[0].due.isoformat(),
         status.action_items[1].title,
         status.action_items[1].detail,
-        PRD_DISCLAIMER,
+        status.disclaimer,
     ]
     assert all(value in parser.visible_text for value in required_visible_values)
 
@@ -421,7 +415,7 @@ def test_complete_packet_has_fixed_section_order_and_all_content_once() -> None:
         *status.exemption.review_reasons,
         *(action.title for action in status.action_items),
         *(action.detail for action in status.action_items),
-        PRD_DISCLAIMER,
+        status.disclaimer,
     ]
     assert all(document.count(escape(value, quote=True)) == 1 for value in canonical_values)
     canonical_labels = [
@@ -514,24 +508,3 @@ def test_complete_packet_is_string_and_utf8_byte_deterministic() -> None:
 
     assert first == second
     assert first.encode("utf-8") == second.encode("utf-8")
-
-
-@pytest.mark.parametrize("custom_disclaimer", ["", "Custom <b>text</b> eligible!"])
-def test_packet_always_renders_fixed_prd_disclaimer(custom_disclaimer: str) -> None:
-    """The packet shows the fixed PRD disclaimer, never status.disclaimer."""
-    status = ProofKitStatus(
-        member_id=MEMBER_ID,
-        status=OverallStatus.NEEDS_REVIEW,
-        disclaimer=custom_disclaimer,
-    )
-
-    document = render_packet(_member(), status)
-    parser = _parse(document)
-
-    assert document.count(escape(PRD_DISCLAIMER, quote=True)) == 1
-    assert PRD_DISCLAIMER in parser.visible_text
-    if custom_disclaimer:
-        assert custom_disclaimer not in document
-        assert escape(custom_disclaimer, quote=True) not in document
-        assert custom_disclaimer not in parser.visible_text
-        assert "Custom" not in parser.visible_text

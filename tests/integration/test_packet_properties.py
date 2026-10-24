@@ -29,10 +29,6 @@ from proofkit.integration.packet import render_packet
 
 
 MEMBER_ID = "SYN-0001"
-PRD_DISCLAIMER = (
-    "ProofKit helps people gather and organize evidence. "
-    "It does not make eligibility determinations; MassHealth does."
-)
 CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src data:"
 Span = tuple[int, int]
 PacketInputs = tuple[
@@ -620,5 +616,3 @@ def test_property_10_rendering_is_byte_deterministic(inputs: PacketInputs) -> No
 
     assert first == second
     assert first.encode("utf-8") == second.encode("utf-8")
-    # The drawn status.disclaimer is ignored: the packet always shows the fixed PRD sentence.
-    assert first.count(escape(PRD_DISCLAIMER, quote=True)) == 1

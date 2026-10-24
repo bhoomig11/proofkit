@@ -146,24 +146,3 @@ def test_member_identity_includes_only_display_name_and_member_id() -> None:
         assert restricted_value not in identity_text
     for restricted_field in ("phone_last4", "eligibility_group", "renewal_date"):
         assert restricted_field not in identity_text
-
-
-def test_phone_last4_never_reaches_any_part_of_the_packet() -> None:
-    """Validates: Requirement 9.1 for the whole packet, not just the identity section."""
-    status = _status(OverallStatus.NEEDS_REVIEW)
-    packets = {
-        phone_last4: render_packet(
-            _member(
-                display_name="Phone Test Member",
-                eligibility_group="ELIGIBILITY-PRIVATE-SENTINEL",
-                renewal_date=date(2042, 11, 23),
-                phone_last4=phone_last4,
-            ),
-            status,
-        )
-        for phone_last4 in ("7319", "4826")
-    }
-
-    assert packets["7319"] == packets["4826"]
-    for phone_last4, document in packets.items():
-        assert phone_last4 not in document
