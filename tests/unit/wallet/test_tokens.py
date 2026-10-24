@@ -33,6 +33,7 @@ def test_parse_money(cell, want):
     ("Fixed-price milestone paid 02/14/2027: $180.00", ["180.00"]),  # the date is not money
     ("Online hours 92.5", []),                                       # unmarked numbers are not money
     ("Tasks completed: 7 | Hours invoiced: 18", []),
+    ("Total 600\nUSD 5.00", ["5.00"]),                  # a marker never reaches across lines
 ])
 def test_money_in_text_needs_a_currency_marker(text, want):
     assert money_in(text) == [D(w) for w in want]
@@ -57,6 +58,10 @@ def test_parse_hours(cell, want):
     ("Total earnings: $410.00", []),
     ("paid 02/14/2027", []),
     ("5 hr 75 min", []),                                    # impossible minutes: not a token
+    ("Hours\nTotal 600.00", []),                            # a label never reaches the next line
+    ("Online hours\n600", []),
+    ("92.5\nhrs", []),
+    ("49 hr\n30 min", ["49.00"]),
 ])
 def test_hours_in_text(text, want):
     assert hours_in(text) == [D(w) for w in want]
