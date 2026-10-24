@@ -1,7 +1,9 @@
 """P2 owns this. DETERMINISTIC month-by-month compliance. No LLM, no I/O."""
 from __future__ import annotations
 
+from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
+from typing import NamedTuple
 
 from proofkit.contracts import ComplianceBasis, EarningsRecord, MonthlyCompliance
 from proofkit.wallet.rules import WalletRules
@@ -9,20 +11,45 @@ from proofkit.wallet.rules import WalletRules
 CENT = Decimal("0.01")
 
 
+class _Slice(NamedTuple):
+    record_id: str
+    hours: Decimal | None
+    income: Decimal
+
+
 def _q(x: Decimal) -> Decimal:
     return x.quantize(CENT, rounding=ROUND_HALF_UP)
 
 
+def _next_month(d: date) -> date:
+    return (d.replace(day=1) + timedelta(days=32)).replace(day=1)
+
+
+def _split_by_month(r: EarningsRecord) -> list[tuple[str, _Slice]]:
+    """Prorate a record across calendar months by day count. Unrounded; rounding happens on the totals."""
+    total_days = (r.period_end - r.period_start).days + 1
+    out = []
+    start = r.period_start
+    while start <= r.period_end:
+        end = min(r.period_end, _next_month(start) - timedelta(days=1))
+        days = (end - start).days + 1
+        hours = None if r.hours is None else r.hours * days / total_days
+        out.append((start.strftime("%Y-%m"), _Slice(r.record_id, hours, r.gross_income * days / total_days)))
+        start = end + timedelta(days=1)
+    return out
+
+
 def evaluate_months(records: list[EarningsRecord], rules: WalletRules) -> list[MonthlyCompliance]:
     """EarningsRecord[] -> MonthlyCompliance[] sorted by month. Pure."""
-    by_month: dict[str, list[EarningsRecord]] = {}
+    by_month: dict[str, list[_Slice]] = {}
     for r in records:
-        by_month.setdefault(r.period_start.strftime("%Y-%m"), []).append(r)
+        for month, s in _split_by_month(r):
+            by_month.setdefault(month, []).append(s)
 
     out = []
-    for month, recs in sorted(by_month.items()):
-        hours = _q(sum((r.hours for r in recs if r.hours is not None), Decimal("0")))
-        income = _q(sum((r.gross_income for r in recs), Decimal("0")))
+    for month, slices in sorted(by_month.items()):
+        hours = _q(sum((s.hours for s in slices if s.hours is not None), Decimal("0")))
+        income = _q(sum((s.income for s in slices), Decimal("0")))
         if hours >= rules.monthly_hours_required:
             basis = ComplianceBasis.HOURS
         elif income >= rules.monthly_income_required:
@@ -30,10 +57,10 @@ def evaluate_months(records: list[EarningsRecord], rules: WalletRules) -> list[M
         else:
             basis = ComplianceBasis.NONE
         out.append(MonthlyCompliance(
-            month=month, total_hours=hours, hours_known_for_all_records=all(r.hours is not None for r in recs),
+            month=month, total_hours=hours, hours_known_for_all_records=all(s.hours is not None for s in slices),
             total_income=income, qualifies=basis != ComplianceBasis.NONE, basis=basis,
             shortfall_hours=_q(max(Decimal("0"), rules.monthly_hours_required - hours)),
             shortfall_income=_q(max(Decimal("0"), rules.monthly_income_required - income)),
-            record_ids=[r.record_id for r in recs],
+            record_ids=[s.record_id for s in slices],
         ))
     return out
