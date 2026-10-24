@@ -51,12 +51,14 @@ def evaluate_months(records: list[EarningsRecord], rules: WalletRules) -> list[M
         key = (r.platform, r.period_start, r.period_end, r.hours, r.gross_income)
         if seen.setdefault(key, r.source_doc_id) == r.source_doc_id:
             kept.append(r)  # otherwise: same statement uploaded twice
-    # Same platform, overlapping days, different documents: we can't tell which statement is right, so neither
-    # counts until someone reviews it. ponytail: O(n^2) pairs, fine for a member's few dozen records.
+    # Same platform, overlapping days, and a different document or a different period (a monthly total next to a
+    # weekly line): we can't tell which is right, so neither counts until someone reviews it. Identical periods in
+    # one document can be separate gigs and both count. ponytail: O(n^2) pairs, fine for a few dozen records.
     for a in kept:
         for b in kept:
-            if (a.platform == b.platform and a.source_doc_id != b.source_doc_id
-                    and a.period_start <= b.period_end and b.period_start <= a.period_end):
+            if (a.platform == b.platform and a.period_start <= b.period_end and b.period_start <= a.period_end
+                    and (a.source_doc_id != b.source_doc_id
+                         or (a.period_start, a.period_end) != (b.period_start, b.period_end))):
                 excluded[a.record_id] = f"overlaps {b.record_id} from another {a.platform} statement"
 
     counted = {r.record_id for r in kept} - excluded.keys()
