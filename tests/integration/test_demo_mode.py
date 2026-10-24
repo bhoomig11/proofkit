@@ -298,3 +298,67 @@ def test_only_env_value_1_selects_demo(monkeypatch, env_demo, expected_mode):
         assert isinstance(client, _StubAnthropicClient)
     else:
         assert not isinstance(client, _StubAnthropicClient)
+
+
+# ─────────────────────────── Ambiguous replay: text embedding two fixture sources ───────────────────────────
+def test_text_embedding_two_fixture_sources_is_ambiguous(notes_by_member, golden_findings,
+                                                         earnings_docs_by_member, golden_records):
+    from proofkit.contracts import ClinicalNote, EarningsDocument
+    from proofkit.wallet import parse_documents
+
+    own_note = notes_by_member["SYN-0002"][0]
+    other_note = notes_by_member["SYN-0001"][0]
+    own_doc = earnings_docs_by_member["SYN-0002"][0]
+    other_doc = next(d for d in earnings_docs_by_member["SYN-0001"] if d.content_text is not None)
+    assert own_doc.content_text is not None
+
+    # The demo matcher itself must refuse to replay when the text embeds two fixture sources,
+    # independent of any downstream grounding or ownership checks in P1A/P2. Check every ordered
+    # cross-member pair, not one hand-picked pair that might tie by accident.
+    llm = demo_llm()
+    all_notes = [n for notes in notes_by_member.values() for n in notes]
+    note_failures = []
+    for a in all_notes:
+        for b in all_notes:
+            if a.member_id == b.member_id:
+                continue
+            got = llm.complete_json(task="extract_findings", instructions="x", untrusted_text=a.text + "\n" + b.text)
+            if got != {"findings": []}:
+                note_failures.append((a.note_id, b.note_id))
+
+    text_docs = [d for docs in earnings_docs_by_member.values() for d in docs if d.content_text is not None]
+    doc_failures = []
+    for a in text_docs:
+        for b in text_docs:
+            if a.member_id == b.member_id:
+                continue
+            got = llm.complete_json(
+                task="extract_earnings", instructions="x", untrusted_text=a.content_text + "\n" + b.content_text
+            )
+            if got != {"records": []}:
+                doc_failures.append((a.doc_id, b.doc_id))
+
+    assert len(all_notes) >= 2 and len(text_docs) >= 2, "need cross-member fixture pairs"
+    # One assertion so a failure reports both lists.
+    assert (note_failures, doc_failures) == ([], []), (
+        f"{len(note_failures)} note pairs replayed items: {note_failures}; "
+        f"{len(doc_failures)} doc pairs replayed records: {doc_failures}"
+    )
+
+    combined_note = ClinicalNote.model_validate(
+        {**own_note.model_dump(mode="json"), "text": own_note.text + "\n" + other_note.text}
+    )
+    bundle = extract_findings([combined_note], "SYN-0002", demo_llm())
+    other_quotes = {f.quote for f in golden_findings["SYN-0001"].findings}
+    assert other_quotes, "SYN-0001 golden findings must not be empty"
+    assert not other_quotes & {f.quote for f in bundle.findings}
+    assert bundle.findings == []
+
+    combined_doc = EarningsDocument.model_validate(
+        {**own_doc.model_dump(mode="json"), "content_text": own_doc.content_text + "\n" + other_doc.content_text}
+    )
+    records = parse_documents([combined_doc], "SYN-0002", demo_llm())
+    other_record_quotes = {r.source_quote for r in golden_records["SYN-0001"]}
+    assert other_record_quotes, "SYN-0001 golden records must not be empty"
+    assert not other_record_quotes & {r.source_quote for r in records}
+    assert records == []
