@@ -1,0 +1,82 @@
+{
+  "member_id": "SYN-0024",
+  "notes_processed": [
+    "N-0024-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0024-a-0",
+      "note_id": "N-0024-a",
+      "note_date": "2026-08-05",
+      "condition": "Shortness of breath",
+      "icd10": "R06.02",
+      "status": "negated",
+      "quote": "No shortness of breath",
+      "quote_start": 409,
+      "quote_end": 431,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0024-a-1",
+      "note_id": "N-0024-a",
+      "note_date": "2026-08-05",
+      "condition": "Malignant neoplasm of breast",
+      "icd10": "C50.919",
+      "status": "family_history",
+      "quote": "Mother with breast cancer",
+      "quote_start": 470,
+      "quote_end": 495,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0024-a-2",
+      "note_id": "N-0024-a",
+      "note_date": "2026-08-05",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 1059,
+      "quote_end": 1081,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0024-a-3",
+      "note_id": "N-0024-a",
+      "note_date": "2026-08-05",
+      "condition": "Chronic kidney disease, stage 4",
+      "icd10": "N18.4",
+      "status": "historical",
+      "quote": "History of chronic kidney disease stage 4, resolved after kidney transplant",
+      "quote_start": 1242,
+      "quote_end": 1317,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0024-a-4",
+      "note_id": "N-0024-a",
+      "note_date": "2026-08-05",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "ruled_out",
+      "quote": "R/o CHF",
+      "quote_start": 1438,
+      "quote_end": 1445,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0024-a-5",
+      "note_id": "N-0024-a",
+      "note_date": "2026-08-05",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1644,
+      "quote_end": 1655,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

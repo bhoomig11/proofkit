@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0009",
+  "notes_processed": [
+    "N-0009-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0009-a-0",
+      "note_id": "N-0009-a",
+      "note_date": "2026-05-25",
+      "condition": "Rheumatoid arthritis",
+      "icd10": "M06.9",
+      "status": "family_history",
+      "quote": "Mother with rheumatoid arthritis",
+      "quote_start": 654,
+      "quote_end": 686,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0009-a-1",
+      "note_id": "N-0009-a",
+      "note_date": "2026-05-25",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "current",
+      "quote": "Chronic congestive heart failure",
+      "quote_start": 1128,
+      "quote_end": 1160,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0009-a-2",
+      "note_id": "N-0009-a",
+      "note_date": "2026-05-25",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1389,
+      "quote_end": 1400,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0009-a-3",
+      "note_id": "N-0009-a",
+      "note_date": "2026-05-25",
+      "condition": "Anemia",
+      "icd10": "D64.9",
+      "status": "current",
+      "quote": "Anemia",
+      "quote_start": 1531,
+      "quote_end": 1537,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

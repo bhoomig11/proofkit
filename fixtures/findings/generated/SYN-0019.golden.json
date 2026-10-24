@@ -1,0 +1,34 @@
+{
+  "member_id": "SYN-0019",
+  "notes_processed": [
+    "N-0019-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0019-a-0",
+      "note_id": "N-0019-a",
+      "note_date": "2025-07-17",
+      "condition": "Shortness of breath",
+      "icd10": "R06.02",
+      "status": "negated",
+      "quote": "No shortness of breath",
+      "quote_start": 535,
+      "quote_end": 557,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0019-a-1",
+      "note_id": "N-0019-a",
+      "note_date": "2025-07-17",
+      "condition": "Other psychoactive substance dependence",
+      "icd10": "F19.20",
+      "status": "current",
+      "quote": "Psychoactive substance dependence",
+      "quote_start": 1195,
+      "quote_end": 1228,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

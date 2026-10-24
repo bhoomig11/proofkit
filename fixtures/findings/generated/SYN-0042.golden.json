@@ -1,0 +1,46 @@
+{
+  "member_id": "SYN-0042",
+  "notes_processed": [
+    "N-0042-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0042-a-0",
+      "note_id": "N-0042-a",
+      "note_date": "2026-05-18",
+      "condition": "Shortness of breath",
+      "icd10": "R06.02",
+      "status": "negated",
+      "quote": "No shortness of breath",
+      "quote_start": 251,
+      "quote_end": 273,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0042-a-1",
+      "note_id": "N-0042-a",
+      "note_date": "2026-05-18",
+      "condition": "Rheumatoid arthritis",
+      "icd10": "M06.9",
+      "status": "family_history",
+      "quote": "Mother with rheumatoid arthritis",
+      "quote_start": 346,
+      "quote_end": 378,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0042-a-2",
+      "note_id": "N-0042-a",
+      "note_date": "2026-05-18",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 983,
+      "quote_end": 1005,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

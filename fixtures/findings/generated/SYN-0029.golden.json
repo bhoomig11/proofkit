@@ -1,0 +1,46 @@
+{
+  "member_id": "SYN-0029",
+  "notes_processed": [
+    "N-0029-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0029-a-0",
+      "note_id": "N-0029-a",
+      "note_date": "2026-10-16",
+      "condition": "Depression",
+      "icd10": "F32.A",
+      "status": "negated",
+      "quote": "denies depression",
+      "quote_start": 323,
+      "quote_end": 340,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0029-a-1",
+      "note_id": "N-0029-a",
+      "note_date": "2026-10-16",
+      "condition": "Mild intermittent asthma",
+      "icd10": "J45.20",
+      "status": "uncertain",
+      "quote": "Possible mild intermittent asthma",
+      "quote_start": 1049,
+      "quote_end": 1082,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0029-a-2",
+      "note_id": "N-0029-a",
+      "note_date": "2026-10-16",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1278,
+      "quote_end": 1289,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

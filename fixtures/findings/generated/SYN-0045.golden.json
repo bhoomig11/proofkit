@@ -1,0 +1,34 @@
+{
+  "member_id": "SYN-0045",
+  "notes_processed": [
+    "N-0045-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0045-a-0",
+      "note_id": "N-0045-a",
+      "note_date": "2026-10-12",
+      "condition": "Schizophrenia",
+      "icd10": "F20.9",
+      "status": "family_history",
+      "quote": "Sister with schizophrenia",
+      "quote_start": 317,
+      "quote_end": 342,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0045-a-1",
+      "note_id": "N-0045-a",
+      "note_date": "2026-10-12",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 981,
+      "quote_end": 1003,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

@@ -1,0 +1,82 @@
+{
+  "member_id": "SYN-0025",
+  "notes_processed": [
+    "N-0025-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0025-a-0",
+      "note_id": "N-0025-a",
+      "note_date": "2026-09-13",
+      "condition": "Shortness of breath",
+      "icd10": "R06.02",
+      "status": "negated",
+      "quote": "No shortness of breath",
+      "quote_start": 433,
+      "quote_end": 455,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0025-a-1",
+      "note_id": "N-0025-a",
+      "note_date": "2026-09-13",
+      "condition": "Schizophrenia",
+      "icd10": "F20.9",
+      "status": "family_history",
+      "quote": "Sister with schizophrenia",
+      "quote_start": 485,
+      "quote_end": 510,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0025-a-2",
+      "note_id": "N-0025-a",
+      "note_date": "2026-09-13",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 1106,
+      "quote_end": 1128,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0025-a-3",
+      "note_id": "N-0025-a",
+      "note_date": "2026-09-13",
+      "condition": "Chronic kidney disease, stage 4",
+      "icd10": "N18.4",
+      "status": "historical",
+      "quote": "History of chronic kidney disease stage 4, resolved after kidney transplant",
+      "quote_start": 1289,
+      "quote_end": 1364,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0025-a-4",
+      "note_id": "N-0025-a",
+      "note_date": "2026-09-13",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "ruled_out",
+      "quote": "R/o CHF",
+      "quote_start": 1485,
+      "quote_end": 1492,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0025-a-5",
+      "note_id": "N-0025-a",
+      "note_date": "2026-09-13",
+      "condition": "Type 2 diabetes mellitus",
+      "icd10": "E11.9",
+      "status": "current",
+      "quote": "Type 2 diabetes mellitus without complications",
+      "quote_start": 1691,
+      "quote_end": 1737,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

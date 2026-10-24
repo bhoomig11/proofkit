@@ -90,7 +90,8 @@ for note_id, member, d, _role, text, golden in NOTES:
     b = by_member.setdefault(member, {"member_id": member, "notes_processed": [], "findings": [],
                                       "dropped_ungrounded": 0, "extractor_version": "golden-label"})
     b["notes_processed"].append(note_id)
-    for i, (quote, cond, icd, status, conf) in enumerate(golden):
+    # finding IDs follow quote position in the note (P1A spec), not listing order
+    for i, (quote, cond, icd, status, conf) in enumerate(sorted(golden, key=lambda g: (text.index(g[0]), g[2]))):
         start = text.index(quote)
         assert text.index(quote) == start
         b["findings"].append({"finding_id": f"F-{note_id}-{i}", "note_id": note_id, "note_date": d,
@@ -102,7 +103,7 @@ for member, b in by_member.items():
 # expected decisions (as_of = DEMO_TODAY, lookback 12 months)
 decisions = {
     "SYN-0001": {"outcome": "exempt", "exemption_type": "medically_frail", "rule_ids": ["MF-AI-01"],
-                  "evidence_finding_ids": ["F-N-0001-a-0", "F-N-0001-b-1"]},
+                  "evidence_finding_ids": ["F-N-0001-a-2", "F-N-0001-b-1"]},
     "SYN-0002": {"outcome": "not_exempt", "exemption_type": "none", "rule_ids": [], "evidence_finding_ids": []},
     "SYN-0003": {"outcome": "exempt", "exemption_type": "medically_frail", "rule_ids": ["MF-MH-03"],
                   "evidence_finding_ids": ["F-N-0003-a-0"]},

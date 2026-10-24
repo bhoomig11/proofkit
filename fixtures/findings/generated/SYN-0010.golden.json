@@ -1,0 +1,34 @@
+{
+  "member_id": "SYN-0010",
+  "notes_processed": [
+    "N-0010-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0010-a-0",
+      "note_id": "N-0010-a",
+      "note_date": "2026-04-28",
+      "condition": "Chest pain",
+      "icd10": "R07.9",
+      "status": "negated",
+      "quote": "Denies chest pain",
+      "quote_start": 580,
+      "quote_end": 597,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0010-a-1",
+      "note_id": "N-0010-a",
+      "note_date": "2026-04-28",
+      "condition": "Rheumatoid arthritis",
+      "icd10": "M06.9",
+      "status": "current",
+      "quote": "Rheumatoid arthritis",
+      "quote_start": 1188,
+      "quote_end": 1208,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

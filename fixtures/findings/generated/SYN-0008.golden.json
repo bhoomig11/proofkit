@@ -1,0 +1,34 @@
+{
+  "member_id": "SYN-0008",
+  "notes_processed": [
+    "N-0008-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0008-a-0",
+      "note_id": "N-0008-a",
+      "note_date": "2026-10-21",
+      "condition": "Chest pain",
+      "icd10": "R07.9",
+      "status": "negated",
+      "quote": "Denies chest pain",
+      "quote_start": 589,
+      "quote_end": 606,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0008-a-1",
+      "note_id": "N-0008-a",
+      "note_date": "2026-10-21",
+      "condition": "Chronic kidney disease, stage 4",
+      "icd10": "N18.4",
+      "status": "current",
+      "quote": "Chronic kidney disease stage 4",
+      "quote_start": 1232,
+      "quote_end": 1262,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}
