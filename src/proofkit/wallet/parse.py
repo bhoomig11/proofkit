@@ -17,11 +17,13 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from proofkit.common.grounding import locate_quote
+from proofkit.common.injection import injection_spans, overlaps_injection
 from proofkit.common.llm import LLMClient, LLMError
 from proofkit.common.redact import get_logger
 from proofkit.contracts import DocumentType, EarningsDocument, EarningsRecord
 from proofkit.wallet.rules import WalletRules, load_wallet_rules
-from proofkit.wallet.tokens import parse_hours, parse_money
+from proofkit.wallet.tokens import hours_in, money_in, parse_hours, parse_money
 
 LLM_TASK = "extract_earnings"
 LLM_INSTRUCTIONS = (
@@ -71,15 +73,27 @@ def _parse_text(doc: EarningsDocument, text: str, member_id: str, llm: LLMClient
         log.warning("llm failed doc_id=%s", doc.doc_id)
         return []
     items = reply.get("records") if isinstance(reply, dict) else None
+    tainted = injection_spans(text)
     out: list[EarningsRecord] = []
+    dropped = 0
     for item in items if isinstance(items, list) else []:
         fields = _llm_fields(item)
-        if fields is None:
+        span = locate_quote(text, fields["quote"]) if fields else None
+        if not fields or not span or overlaps_injection(span.start, span.end, tainted) \
+                or not _numbers_in_quote(fields["income"], fields["hours"], span.text):
+            dropped += 1
             continue
+        fields["quote"] = span.text  # the document's own characters, not the LLM's copy
         rec = _record(doc, member_id, len(out), rules, **fields)
         if rec:
             out.append(rec)
+    log.info("llm doc_id=%s kept=%d dropped=%d", doc.doc_id, len(out), dropped)
     return out
+
+
+def _numbers_in_quote(income: Decimal, hours: Decimal | None, quote: str) -> bool:
+    """The claimed numbers must be written in the quote itself, so instructions elsewhere can't set them."""
+    return income in money_in(quote) and (hours is None or hours in hours_in(quote))
 
 
 def _llm_fields(item: object) -> dict | None:
