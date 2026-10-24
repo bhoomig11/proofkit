@@ -22,16 +22,16 @@ def _optional(module: str, name: str):
         return None
 
 
-def metric_tiles(status, today) -> None:
+def metric_tiles(status, today, rules=None) -> None:
     fn = _optional("app.metrics", "render_metric_tiles")
     if fn:
-        fn(status, today)
+        fn(status, today, rules)
 
 
 def sms_card(member, status) -> None:
     fn = _optional("app.sms_card", "render_sms_card")
     if fn:
-        fn(member, status)
+        fn(member, status, key=f"sms-{member.member_id}")
 
 
 def earnings_upload(member, wallet_rules, today) -> None:
@@ -42,8 +42,8 @@ def earnings_upload(member, wallet_rules, today) -> None:
     accepted = fn(member, wallet_rules, today)
     if isinstance(accepted, list):
         docs = [d for d in accepted if isinstance(d, EarningsDocument) and d.member_id == member.member_id]
-        if docs:
-            add_earnings(member.member_id, docs)
+        if docs and add_earnings(member.member_id, docs):
+            st.rerun()      # new statements: refresh the status everywhere
 
 
 def sample_gallery(member_id: str) -> None:

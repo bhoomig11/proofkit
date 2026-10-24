@@ -70,10 +70,24 @@ def add_note(member_id: str, note: ClinicalNote) -> None:
     documents(member_id)["notes"].append(note)
 
 
-def add_earnings(member_id: str, docs: list[EarningsDocument]) -> None:
-    """Hook for app/upload.py: earnings documents added here are included in the member's status."""
-    known = {d.doc_id for d in documents(member_id)["earnings"]}
-    documents(member_id)["earnings"].extend(d for d in docs if d.doc_id not in known)
+def _content_key(doc: EarningsDocument) -> str:
+    return hashlib.sha256(f"{doc.filename}|{doc.doc_type.value}|{doc.content_text or doc.content_b64}".encode()
+                          ).hexdigest()
+
+
+def add_earnings(member_id: str, docs: list[EarningsDocument]) -> int:
+    """Hook for app/upload.py: add new earnings documents (deduped by content, given unique IDs). Returns # added."""
+    store = documents(member_id)["earnings"]
+    known = {_content_key(d) for d in store}
+    added = 0
+    for doc in docs:
+        key = _content_key(doc)
+        if key in known:
+            continue
+        known.add(key)
+        store.append(doc.model_copy(update={"doc_id": f"U-{member_id[4:]}-{len(store) + 1}"}))
+        added += 1
+    return added
 
 
 def _fingerprint(member: Member, notes: list, earnings: list, live: bool) -> str:

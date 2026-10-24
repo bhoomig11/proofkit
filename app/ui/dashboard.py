@@ -27,10 +27,7 @@ def render_dashboard(view, *, section: str, wallet_rules, today, calm: bool, liv
     docs = documents(member.member_id)
     has_docs = bool(docs["notes"] or docs["earnings"])
     _hero(view, today, has_docs)
-    extras.metric_tiles(status, today)
-    if status.status.value == "protected" and not calm and st.session_state.get("cheered") != member.member_id:
-        st.session_state.cheered = member.member_id
-        st.balloons()
+    extras.metric_tiles(status, today, wallet_rules)
 
     render = {
         "Next steps": lambda: _next_steps(view, has_docs),
@@ -156,9 +153,6 @@ def _money(view, wallet_rules, today, calm: bool) -> None:
     st.markdown(f"**Now:** {word} → **With this change:** {STATUS[after.status.value][0]}")
     if after.status.value == "protected" and status.status.value != "protected":
         st.success("That would be enough. Ask your employer or platform for a statement showing it.")
-        if not calm and st.session_state.get("whatif_cheer") != (member.member_id, extra_h, extra_i):
-            st.session_state.whatif_cheer = (member.member_id, extra_h, extra_i)
-            st.balloons()
 
 
 def _packet(view) -> None:

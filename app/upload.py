@@ -141,8 +141,11 @@ def _month_rows(wallet: WalletResult) -> list[dict[str, str]]:
     return rows
 
 
-def render_upload(member: Member, rules: WalletRules, today: date) -> None:
-    """Streamlit: upload pay statements (plus queued samples) and show the month-by-month results."""
+def render_upload(member: Member, rules: WalletRules, today: date) -> list[EarningsDocument]:
+    """Streamlit: upload pay statements (plus queued samples) and show the month-by-month results.
+
+    Returns the documents that were processed successfully, so the app can add them to the member's status.
+    """
     import streamlit as st
 
     st.subheader("Upload a pay statement")
@@ -152,7 +155,7 @@ def render_upload(member: Member, rules: WalletRules, today: date) -> None:
     pending += list(st.session_state.get(UPLOAD_QUEUE_KEY, []))
     if not pending:
         st.caption("Add a CSV, text, PDF or image statement, or load a sample below.")
-        return
+        return []
     if st.session_state.get(UPLOAD_QUEUE_KEY) and st.button("Clear loaded samples",
                                                             key=f"ui_extras_clear_{member.member_id}"):
         st.session_state[UPLOAD_QUEUE_KEY] = []
@@ -165,37 +168,45 @@ def render_upload(member: Member, rules: WalletRules, today: date) -> None:
         except ValueError as exc:
             st.error(str(exc))
     if not docs:
-        return
+        return []
 
     # CSV and images never need the AI: process them offline right away.
     offline_docs = [d for d in docs if d.doc_type not in _LIVE_AI_TYPES]
     live_docs = [d for d in docs if d.doc_type in _LIVE_AI_TYPES]
+    accepted: list[EarningsDocument] = []
     if offline_docs:
         if any(d.doc_type == DocumentType.IMAGE for d in offline_docs):
             st.info(IMAGE_NOTE)
         offline_llm, _ = upload_llm(False)
-        _show_results(st, member, offline_docs, offline_llm, rules, today)
+        if _show_results(st, member, offline_docs, offline_llm, rules, today):
+            accepted += offline_docs
 
     if not live_docs:
-        return
+        return accepted
     # Text and PDF files go to the AI provider only after an explicit click.
     st.info(LIVE_AI_NOTE)
     if st.button("Process with live AI", key=f"ui_extras_live_ai_{member.member_id}"):
         live_llm, mode = upload_llm(True)
         if mode == "offline-demo":
             st.warning(NO_LIVE_KEY_NOTE)
-            return
-        _show_results(st, member, live_docs, live_llm, rules, today)
+            return accepted
+        if _show_results(st, member, live_docs, live_llm, rules, today):
+            accepted += live_docs
+    return accepted
 
 
 def _show_results(st, member: Member, docs: list[EarningsDocument], llm: LLMClient, rules: WalletRules,
-                  today: date) -> None:
-    """Streamlit: run upload_results for one batch and show the month table or a fixed friendly message."""
+                  today: date) -> bool:
+    """Streamlit: run upload_results for one batch and show the month table or a fixed friendly message.
+
+    Returns True when the batch produced earnings (so the caller can keep it).
+    """
     wallet, error = upload_results(member, docs, llm, rules, today)
     if error is not None:
         st.error(error)
-        return
+        return False
     if wallet is None or not wallet.months:
         st.caption("No earnings were found in these files.")
-        return
+        return False
     st.dataframe(_month_rows(wallet), hide_index=True, use_container_width=True)
+    return True

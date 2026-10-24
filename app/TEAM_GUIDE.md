@@ -59,10 +59,10 @@ Live AI (Accessibility menu): off = reads the sample documents offline; on = rea
 | `app/theme.py`, `app/a11y.py`, `app/format.py`, `app/highlight.py` | Tokens (teal, WCAG-tested), Pip, plain formatting, safe escaping |
 | `src/proofkit/integration/packet.py` | Downloadable, escaped HTML proof packet |
 
-**Plug-in contract (Karthik's `app/upload.py`):** the hook already lives in the Documents section
-(`app/ui/extras.py`), so no `main.py` edit is needed. `render_upload(member, wallet_rules, today)` should **return
-the list of `EarningsDocument` it accepted**; they're added to the member's documents and the status updates
-end to end. `render_sample_gallery(member_id)` is shown under it.
+**Plug-ins (Karthik's `final/ui-extras`, merged):** wired through `app/ui/extras.py`, no `main.py` edits.
+`render_upload` (Documents) returns the statements it processed, and they're added to the member's documents, so the
+status updates end to end (deduped by content). `render_sample_gallery` sits under it, `render_metric_tiles` under the
+status header, and `render_sms_card` at the end of Next steps.
 
 (The Python package is still called `proofkit`; only the product name changed.)
 
@@ -116,5 +116,5 @@ used. The UI spec and log so far: `.kiro/specs/final-ui/`.
 
 ## 8. Demo video (under 3 minutes)
 Sign in as Maria (exempt, lupus quote highlighted) → sign out and in as James (negation struck through, protected by
-hours) → Dev (at risk; drag the what-if to +$60 → Protected) → Red team account (injections ignored) → ask Coverage
+hours) → Dev (at risk; drag the what-if to +$60: Protected) → Red team account (injections ignored) → ask Coverage
 Coach a question in Spanish.

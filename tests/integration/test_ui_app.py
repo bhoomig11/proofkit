@@ -140,3 +140,21 @@ def test_user_menu_shows_account_details_and_status_circle():
     assert "maria@example.com" in text and "Member ID: SYN-0001" in text and "Status: Protected" in text
     assert "pk-dot-ok" in " ".join(m.value for m in at.markdown)
     assert "pk-dot-risk" in " ".join(m.value for m in signed_in("SYN-0004").markdown)
+
+
+def test_uploaded_pay_statement_updates_a_new_users_own_status_end_to_end():
+    from datetime import date
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["account"] = Account(name="Rosa", email="rosa@example.org", member_id="SYN-1001",
+                                          renewal_date=date(2027, 3, 20))
+    at.run()
+    assert "Add your documents" in page_text(at)
+    go(at, "Documents")
+    load_keys = [b.key for b in at.button if b.key and b.key.startswith("ui_extras_load_SYN-1001_")]
+    assert load_keys, "sample gallery should offer samples to load"
+    for key in load_keys:                      # the CSV sample is processed offline (no AI) and kept
+        at.button(key=key).click().run()
+        assert not at.exception, at.exception
+    assert "Add your documents" not in page_text(at)      # her status now comes from her own statements
+    go(at, "Hours & money")
+    assert len(at.get("progress")) >= 2                   # hours + income bars for at least one month
