@@ -53,6 +53,7 @@ _CSV_COLUMNS = {
     "hours": ("hours",),
     "income": ("gross_pay", "gross_income", "earnings", "total"),
 }
+_PLATFORM = re.compile(r"[a-z0-9_]{1,60}")
 log = get_logger(__name__)
 
 
@@ -176,12 +177,15 @@ def _llm_fields(item: object) -> dict | None:
     hours = None if raw_hours is None else parse_hours(str(raw_hours))
     if income is None or income < 0 or (raw_hours is not None and hours is None):
         return None
-    return {"platform": "_".join(platform.lower().replace("-", " ").split()), "start": start, "end": end,
+    return {"platform": platform, "start": start, "end": end,
             "hours": hours, "income": income, "quote": quote, "confidence": float(conf)}
 
 
 def _record(doc: EarningsDocument, member_id: str, i: int, rules: WalletRules, *, platform: str, start: date,
             end: date, hours: Decimal | None, income: Decimal, quote: str, confidence: float) -> EarningsRecord | None:
+    platform = "_".join(platform.lower().replace("-", " ").split())
+    if not _PLATFORM.fullmatch(platform):
+        return None  # not a plain name: could be a formula, markup, or injected text
     if platform not in rules.known_platforms:
         confidence = min(confidence, UNVERIFIED_CONFIDENCE)
     try:
@@ -212,7 +216,7 @@ def _parse_csv(doc: EarningsDocument, text: str, member_id: str, rules: WalletRu
             continue
         if len(row) != len(header):
             continue
-        platform = row[col["platform"]].strip().lower()
+        platform = row[col["platform"]]
         income = parse_money(row[col["income"]])
         hours_cell = row[col["hours"]].strip() if "hours" in col else ""
         hours = parse_hours(hours_cell) if hours_cell else None
@@ -221,7 +225,7 @@ def _parse_csv(doc: EarningsDocument, text: str, member_id: str, rules: WalletRu
             end = date.fromisoformat(row[col["period_end"]].strip())
         except ValueError:
             continue
-        if not platform or income is None or income < 0 or (hours_cell and hours is None):
+        if income is None or income < 0 or (hours_cell and hours is None):
             continue
         rec = _record(doc, member_id, len(out), rules, platform=platform, start=start, end=end, hours=hours,
                       income=income, quote=line, confidence=CSV_CONFIDENCE)
