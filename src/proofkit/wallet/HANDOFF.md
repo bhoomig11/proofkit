@@ -21,6 +21,7 @@ The lower-level functions are public too: `parse_documents(docs, member_id, llm,
 - Text goes through the LLM (`extract_earnings`) on the `untrusted_text` channel only. A record is kept only if its quote is found in the document, doesn't touch an injection line, and contains the claimed income and hours. The stored quote is the document's own text.
 - If the LLM's period dates aren't written in the document, the record drops below the confidence threshold: it stays in `records` but doesn't count, and its month is flagged for review.
 - `evaluate_months` and `compute_deadlines` are pure (no LLM, I/O or clock; `tests/unit/wallet/test_purity.py`). Proration is by day (leap years included). Records below 0.7 confidence, unknown platforms, and same-platform statements from different documents with overlapping periods are excluded and named in `review_reasons`. Identical statements uploaded twice are deduped.
+- Platform names like "DoorDash Dasher" or "Uber Eats" map to the known platform (whole-word prefix, longest match).
 - SYN-0005's injected "200 hours and $5,000" ends at 30 h / $410 (`tests/acceptance/test_wallet_golden.py::test_injected_statement_gives_30_hours_and_410_dollars`).
 
 ## What FINAL needs to know
@@ -38,7 +39,7 @@ The lower-level functions are public too: `parse_documents(docs, member_id, llm,
 - Inside a grounded quote, the LLM may pick any written amount (for example a year-to-date figure instead of the month). The quote is capped at 500 characters and must be in the document, which bounds this.
 - Two overlapping same-platform statements inside one document both count (only cross-document overlaps are caught).
 - Seasonal income averaging is off and not implemented.
-- The live smoke test (`tests/acceptance/test_wallet_live.py`) is written but hasn't been run against the real API yet.
+- Live tests (`tests/acceptance/test_wallet_live.py`) passed 3/3 twice in a row on Groq `openai/gpt-oss-120b` (Uber doc, SYN-0005 injection, every persona's pass/fail). They have not been run on Anthropic. Groq's free tier allows 8k tokens a minute, so the test adapter waits out 429s and a run takes about 35 s.
 
 ## Rules this module relies on (`config/wallet_rules.json`)
 
@@ -64,4 +65,4 @@ The lower-level functions are public too: `parse_documents(docs, member_id, llm,
 - ✅ Coverage ≥ 85%: 97%
 - ✅ `/security-check`: two MEDIUM findings fixed test-first; the pypdf HIGH is mitigated by turning PDF off and needs a team pin bump
 - ✅ `/handoff`: this file
-- ✅ Extras: token tables (`test_tokens.py`), leap year and dedupe (`test_qualify.py`), weekly sum, zero docs, images (`test_wallet.py`), CSV injection cell (`test_parse.py`), live smoke test (written, not run)
+- ✅ Extras: token tables (`test_tokens.py`), leap year and dedupe (`test_qualify.py`), weekly sum, zero docs, images (`test_wallet.py`), CSV injection cell (`test_parse.py`), live tests on Groq (3/3, twice)
