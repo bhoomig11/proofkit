@@ -37,15 +37,7 @@ def test_answer_html_keeps_line_breaks_without_blank_lines():
 
 
 def test_app_shows_coach_answer_in_the_wrapping_block():
-    import pytest
-    pytest.importorskip("streamlit")
-    from pathlib import Path
-
-    from streamlit.testing.v1 import AppTest
-
-    at = AppTest.from_file(str(Path(__file__).resolve().parents[2] / "app" / "main.py"), default_timeout=60)
-    at.session_state["member_id"] = "SYN-0004"
-    at.run()
+    at = open_coach()
     at.button(key="suggested-0").click().run()
     assert not at.exception, at.exception
     answers = [m.value for m in at.markdown if "pk-answer" in m.value and "At risk" in m.value]
@@ -75,15 +67,7 @@ def test_describe_inputs_is_plain_words():
 
 
 def _dev_what_if():
-    import pytest
-    pytest.importorskip("streamlit")
-    from pathlib import Path
-
-    from streamlit.testing.v1 import AppTest
-
-    at = AppTest.from_file(str(Path(__file__).resolve().parents[2] / "app" / "main.py"), default_timeout=60)
-    at.session_state["member_id"] = "SYN-0004"
-    at.run()
+    at = open_coach()
     at.button(key="suggested-2").click().run()  # "What if I earn $60 more?"
     return at
 
@@ -102,3 +86,21 @@ def test_show_how_the_ai_works_reveals_tool_and_fallback():
     at.toggle(key="coach_show_tech").set_value(True).run()
     texts = " ".join(t.value for t in at.text)
     assert "Tool: what_if" in texts and "Answered by:" in texts
+
+
+def open_coach(member_id="SYN-0004"):
+    """Signed in as a demo account, with the floating Coverage Coach panel open (like a member would)."""
+    import pytest
+    pytest.importorskip("streamlit")
+    from pathlib import Path
+
+    from streamlit.testing.v1 import AppTest
+
+    from app.auth import DEMO_LOGINS, Account
+
+    demo = next(x for x in DEMO_LOGINS if x["member_id"] == member_id)
+    at = AppTest.from_file(str(Path(__file__).resolve().parents[2] / "app" / "main.py"), default_timeout=60)
+    at.session_state["account"] = Account(name=demo["name"], email=demo["email"], member_id=member_id)
+    at.run()
+    at.button(key="coach_open_btn").click().run()
+    return at

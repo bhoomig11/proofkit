@@ -1,12 +1,7 @@
 """Coverage Coach accessibility: readable messages, announced answers, and the right language for screen
 readers and read-aloud (offline answers are English even if another language is selected)."""
-from pathlib import Path
-
-import pytest
-
 from app.agent_panel import ChatResult, answer_html, answer_language
 
-APP = str(Path(__file__).resolve().parents[2] / "app" / "main.py")
 
 
 def _result(answer, facts):
@@ -28,12 +23,9 @@ def test_offline_facts_answer_is_english_even_when_spanish_is_selected():
 
 
 def _ask(selected_language="EN"):
-    pytest.importorskip("streamlit")
-    from streamlit.testing.v1 import AppTest
+    from tests.integration.test_coach_display import open_coach
 
-    at = AppTest.from_file(APP, default_timeout=60)
-    at.session_state["member_id"] = "SYN-0004"
-    at.run()
+    at = open_coach("SYN-0004")
     at.selectbox(key="coach_language").set_value(selected_language).run()
     at.button(key="suggested-0").click().run()
     return at
