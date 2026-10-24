@@ -26,7 +26,9 @@ MAX_LISTED = 8                    # evidence lines / review reasons shown before
 MAX_QUOTE_CHARS = 200
 SIGN_OFF = "This statement must be reviewed and signed by a licensed clinician."
 DISCLAIMER = "ProofKit organizes evidence. MassHealth makes all eligibility determinations."
-ICD_TOKEN = re.compile(r"\b[A-Z][0-9][0-9A-Z](?:\.[0-9A-Z]{1,4})?\b")
+ICD_TOKEN = re.compile(r"\b[A-Z][0-9][0-9A-Z](?:\.?[0-9A-Z]{1,4})?\b", re.IGNORECASE)  # any case, dot optional
+ELIGIBILITY_CLAIM = re.compile(r"\b(exempt\w*|eligib\w*|qualif\w*|frail\w*|work requirements?|masshealth|medicaid)\b",
+                               re.IGNORECASE)   # the summary describes conditions; it never claims eligibility
 
 INSTRUCTIONS = (
     "You are helping a clinician draft a medical frailty statement. The evidence (ICD-10 code, condition and the "
@@ -52,6 +54,11 @@ def _has_term(text: str, term: str) -> bool:
     return re.search(r"(?<![\w-])" + re.escape(term) + r"(?![\w-])", text, re.IGNORECASE) is not None
 
 
+def _normalise_code(token: str) -> str:
+    token = token.upper()
+    return token if "." in token or len(token) <= 3 else f"{token[:3]}.{token[3:]}"
+
+
 def _evidence(decision: ExemptionDecision, bundle: FindingsBundle) -> list[Finding]:
     by_id = {f.finding_id: f for f in bundle.findings}
     missing = [fid for fid in decision.evidence_finding_ids if fid not in by_id]
@@ -66,9 +73,11 @@ def _summary_problem(summary: object, evidence: list[Finding], rules: list[Rule]
         return "missing"
     if len(summary) > MAX_SUMMARY_CHARS:
         return "too_long"
-    codes = {f.icd10 for f in evidence}
-    if any(code not in codes for code in ICD_TOKEN.findall(summary)):
-        return "unknown_code"
+    if ELIGIBILITY_CLAIM.search(summary):
+        return "eligibility_claim"
+    for token in (_normalise_code(m.group(0)) for m in ICD_TOKEN.finditer(summary)):
+        if not any(icd_matches(f.icd10, token) for f in evidence):
+            return "unknown_code"
     grounded = " ".join(f"{f.condition} {f.quote}" for f in evidence)
     for rule in rules:
         if any(icd_matches(f.icd10, p) for f in evidence for p in rule.icd10_prefixes):
