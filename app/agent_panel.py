@@ -8,8 +8,11 @@ from typing import Any, Protocol
 
 from proofkit.common.llm import LLMClient
 from proofkit.contracts import FindingsBundle, Member, ProofKitStatus
-from proofkit.integration import ask_coach
+from proofkit.integration import ask_coach, welcome_message
 from proofkit.wallet import WalletRules
+
+from app.format import format_money, month_long
+from app.highlight import escape_plain
 
 SUGGESTED_QUESTIONS = (
     "Am I covered?",
@@ -18,6 +21,8 @@ SUGGESTED_QUESTIONS = (
     "What should I do next?",
 )
 LANGUAGE_OPTIONS = {"EN": "en", "ES": "es", "PT": "pt", "HT": "ht"}
+PENDING_KEY = "coach_pending"  # a chip or typed question waiting to be answered on the next run
+INPUT_KEY = "coach_input"
 
 
 @dataclass(frozen=True)
@@ -39,6 +44,7 @@ class ChatResult:
     facts: tuple[str, ...]
     used_fallback: bool
     disclaimer: str
+    inputs: tuple[tuple[str, str], ...] = ()
 
 
 class ChatBackend(Protocol):
@@ -69,7 +75,47 @@ class CoachBackend:
             facts=tuple(reply.facts),
             used_fallback=reply.used_fallback,
             disclaimer=reply.disclaimer,
+            inputs=tuple(reply.inputs.items()),
         )
+
+
+def describe_inputs(tool: str, inputs: dict[str, str]) -> str | None:
+    """Plain words for what the coach worked out, e.g. 'Your what-if: +$60.00 income in February 2027'."""
+    from decimal import Decimal
+
+    month = f" in {month_long(inputs['month'])}" if inputs.get("month") else ""
+    if tool == "what_if":
+        parts = ([f"+{format_money(Decimal(inputs['extra_income']))} income"] if inputs.get("extra_income") else []) \
+            + ([f"+{inputs['extra_hours']} hours"] if inputs.get("extra_hours") else [])
+        return f"Your what-if: {' and '.join(parts)}{month}" if parts else None
+    if tool == "explain_month" and inputs.get("month"):
+        return f"Month asked about: {month_long(inputs['month'])}"
+    return None
+
+
+# Characters Streamlit's markdown would act on: links, emphasis, code, headings, tables, and $...$ formulas.
+_MARKDOWN_ENTITIES = {c: f"&#{ord(c)};" for c in "[]()*_`#|~$\\"}
+
+
+def answer_html(text: str, lang: str | None = None, announce: bool = False) -> str:
+    """Wrap dynamic coach text in one wrapping block that renders as plain characters.
+
+    HTML is escaped, markdown and formula characters become entities, and line breaks become <br> so the
+    block has no blank lines (a blank line would end the HTML block and let markdown run again).
+    `lang` tells screen readers which language to read; `announce` marks the newest answer as a live region.
+    """
+    # One pass, one escape per character: escaping HTML first and then markdown would re-escape the '#'
+    # inside entities like &#x27; and show the raw code instead of an apostrophe.
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    safe = "".join(_MARKDOWN_ENTITIES.get(c) or escape_plain(c) for c in text).replace("\n", "<br>")
+    attrs = (f" lang='{lang}'" if lang in LANGUAGE_OPTIONS.values() else "") \
+        + (" role='status' aria-live='polite'" if announce else "")
+    return f"<div class='pk-answer'{attrs} style='white-space:normal;overflow-wrap:anywhere'>{safe}</div>"
+
+
+def answer_language(result: ChatResult, selected: str) -> str:
+    """The language the answer is really in: offline answers are the English facts, whatever was selected."""
+    return "en" if result.answer == " ".join(result.facts) else selected
 
 
 def _safe_json_string(value: str) -> str:
@@ -78,51 +124,67 @@ def _safe_json_string(value: str) -> str:
 
 
 def _read_aloud_html(answer: str, language: str) -> str:
+    """A compact read-aloud control. Pressing it again while speaking stops the voice."""
     language_tags = {"en": "en-US", "es": "es-US", "pt": "pt-BR"}
     text = _safe_json_string(answer)
     tag = _safe_json_string(language_tags[language])
-    return f"""<!doctype html><html><body style="margin:0;background:transparent">
-<button id="speak" aria-label="Read this answer aloud" style="min-height:44px;padding:8px 12px">Read aloud</button>
+    return f"""<!doctype html><html><body style="margin:0;background:transparent;font-family:sans-serif">
+<button id="speak" aria-label="Read this answer aloud" aria-pressed="false"
+ style="min-height:44px;padding:4px 10px;border:0;background:transparent;color:#5032C8;
+ font-size:14px;font-weight:600;text-decoration:underline;cursor:pointer">&#128264; Read aloud</button>
 <script>
-const text={text}; const language={tag};
-document.getElementById('speak').addEventListener('click', () => {{
+const text={text}; const language={tag}; const button=document.getElementById('speak');
+function idle() {{ button.textContent='\\u{{1F508}} Read aloud'; button.setAttribute('aria-pressed','false');
+  button.setAttribute('aria-label','Read this answer aloud'); }}
+try {{ const accent = window.parent.getComputedStyle(window.parent.document.documentElement)
+  .getPropertyValue('--pk-accent').trim(); if (accent) button.style.color = accent; }} catch (e) {{}}
+button.addEventListener('click', () => {{
+  const speaking = button.getAttribute('aria-pressed') === 'true';
   window.speechSynthesis.cancel();
+  if (speaking) {{ idle(); return; }}
   const speech = new SpeechSynthesisUtterance(text); speech.lang = language;
+  speech.onend = idle; speech.onerror = idle;
+  button.textContent='\\u{{23F9}} Stop reading'; button.setAttribute('aria-pressed','true');
+  button.setAttribute('aria-label','Stop reading this answer');
   window.speechSynthesis.speak(speech);
 }});
 </script></body></html>"""
 
 
+def render_settings() -> None:
+    """Chat settings, shown behind the gear in the coach header. Values live in session state by key."""
+    import streamlit as st
+
+    st.selectbox("Answer language", tuple(LANGUAGE_OPTIONS), key="coach_language")
+    st.toggle("Plain language", key="coach_plain")
+    st.toggle("Show how the AI works", key="coach_show_tech",
+              help="Adds which read-only tool answered and whether live AI was used.")
+
+
 def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, today: date,
-                       backend: ChatBackend | None = None) -> None:
-    """Render the Streamlit coach; imported lazily so pure tests do not need Streamlit."""
+                       backend: ChatBackend | None = None, chat_height: int | None = None) -> None:
+    """Render the Streamlit coach; imported lazily so pure tests do not need Streamlit.
+
+    Settings are read from session state (the dock shows them behind its gear). `chat_height` puts the
+    messages in a scrolling list of that height so the input stays pinned under it.
+    """
     import streamlit as st
     import streamlit.components.v1 as components
 
     coach = backend or CoachBackend()
-    st.caption("Ask about your status, proof, or next step. The coach cannot change your result.")
-    language_label = st.selectbox("Answer language", tuple(LANGUAGE_OPTIONS), key="coach_language")
-    plain = st.toggle("Plain language", value=True, key="coach_plain")
-    language = LANGUAGE_OPTIONS[language_label]
+    language = LANGUAGE_OPTIONS.get(st.session_state.get("coach_language", "EN"), "en")
+    plain = bool(st.session_state.get("coach_plain", True))
+    show_tech = bool(st.session_state.get("coach_show_tech", False))
 
     if "chat_messages" not in st.session_state:
         st.session_state.chat_messages = []
     if st.session_state.get("chat_member") != view.member.member_id:
         st.session_state.chat_messages = []
         st.session_state.chat_member = view.member.member_id
+        st.session_state.pop(PENDING_KEY, None)
 
-    suggested: str | None = None
-    for index, label in enumerate(SUGGESTED_QUESTIONS):
-        if st.button(label, key=f"suggested-{index}", use_container_width=True):
-            suggested = label
-
-    for question, result in st.session_state.chat_messages:
-        with st.chat_message("user"):
-            st.text(question)
-        with st.chat_message("assistant"):
-            _render_answer(result, language, components, st)
-
-    question = suggested or st.chat_input("Ask Coverage Coach")
+    # Answer a chip or typed question before drawing, so the new message appears in this same run.
+    question = st.session_state.pop(PENDING_KEY, None)
     if question:
         context = CoachContext(
             member=view.member,
@@ -135,25 +197,61 @@ def render_agent_panel(*, view: Any, llm: LLMClient, wallet_rules: WalletRules, 
             llm=llm,
         )
         try:
-            result = coach.ask(question, context)
+            st.session_state.chat_messages.append((question, coach.ask(question, context)))
         except ValueError as exc:
             st.error(str(exc))
-            return
-        st.session_state.chat_messages.append((question, result))
-        st.rerun()
+    messages = st.session_state.chat_messages
+
+    with st.container(height=chat_height, border=False, key="coach_messages"):
+        if not messages:
+            with st.chat_message("assistant"):
+                st.markdown(answer_html(welcome_message(view.member)), unsafe_allow_html=True)
+            with st.container(key="coach_suggestions"):
+                for index, label in enumerate(SUGGESTED_QUESTIONS):
+                    st.button(label, key=f"suggested-{index}", on_click=_queue, args=(label,))
+        for index, (asked, result) in enumerate(messages):
+            with st.chat_message("user"):
+                st.markdown(answer_html(asked), unsafe_allow_html=True)
+            with st.chat_message("assistant"):
+                _render_answer(result, language, components, st, show_tech, announce=index == len(messages) - 1)
+
+    st.chat_input("Write a message...", key=INPUT_KEY, on_submit=_queue_typed)
 
 
-def _render_answer(result: ChatResult, language: str, components: Any, st: Any) -> None:
-    """Render dynamic answer/facts as plain text and a transparent trace."""
-    st.text(result.answer)
-    with st.expander("Agent trace — how this answer was made"):
-        st.text(f"Tool: {result.tool}")
-        st.text("Arguments: validated inside the read-only coach")
-        st.text(f"Fallback used: {'yes' if result.used_fallback else 'no'}")
-        st.text("Verified facts:")
+def _queue(question: str) -> None:
+    import streamlit as st
+
+    st.session_state[PENDING_KEY] = question
+
+
+def _queue_typed() -> None:
+    import streamlit as st
+
+    typed = st.session_state.get(INPUT_KEY)
+    if typed:
+        st.session_state[PENDING_KEY] = typed
+
+
+def _render_answer(result: ChatResult, language: str, components: Any, st: Any, show_tech: bool = False,
+                   announce: bool = False) -> None:
+    """Render the answer, then 'How we know this': inputs and verified facts; tech details only on request."""
+    spoken = answer_language(result, language)
+    st.markdown(answer_html(result.answer, lang=spoken, announce=announce), unsafe_allow_html=True)
+    if spoken != language:
+        st.caption("Shown in English because live AI is off.")
+    language = spoken  # read aloud with the voice that matches the text
+    with st.expander("How we know this"):
+        described = describe_inputs(result.tool, dict(result.inputs))
+        if described:
+            st.markdown(answer_html(described), unsafe_allow_html=True)
+        st.caption("Checked by RenewRight's rules:")
         for fact in result.facts:
-            st.text(f"• {fact}")
+            st.markdown(answer_html(f"• {fact}"), unsafe_allow_html=True)
+        if show_tech:
+            st.text(f"Tool: {result.tool}")
+            st.text("Answered by: " + ("rules only (live AI off or not used)" if result.used_fallback
+                                       else "live AI wording over rule-checked facts"))
     if language == "ht":
         st.caption("Read aloud is unavailable: this browser may not have a Haitian Creole voice.")
     else:
-        components.html(_read_aloud_html(result.answer, language), height=54)
+        components.html(_read_aloud_html(result.answer, language), height=44)

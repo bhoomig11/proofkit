@@ -47,6 +47,9 @@ def build_css(theme: str, *, large_text: bool, comfortable: bool, reduce_motion:
 .pk-status-at_risk{{color:var(--pk-risk)}}
 mark{{background:var(--pk-mark);color:var(--pk-text);font-weight:750;text-decoration:underline 2px}}
 button,a,input,select,textarea,[role="button"]{{min-height:44px;min-width:44px}}
+button[kind="secondary"],button[kind="secondaryFormSubmit"]{{background:var(--pk-surface);color:var(--pk-text);border:1px solid var(--pk-border)}}
+button[kind="secondary"]:hover,button[kind="secondaryFormSubmit"]:hover{{border-color:var(--pk-accent);color:var(--pk-accent)}}
+button[kind="secondary"] p,button[kind="secondaryFormSubmit"] p{{color:inherit}}
 *:focus-visible{{outline:3px solid var(--pk-focus)!important;outline-offset:3px!important}}
 .pk-note{{white-space:pre-wrap;overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}}
 .pk-not-counted{{text-decoration:line-through;text-decoration-thickness:2px}}
