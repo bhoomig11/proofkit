@@ -157,18 +157,25 @@ def _explain_status(status: ProofKitStatus) -> list[str]:
 
 
 def _show_evidence(status: ProofKitStatus, findings: FindingsBundle | None) -> list[str]:
+    """Member-facing: say what counts, never name codes, rule IDs or a suspected diagnosis in chat.
+
+    The clinician-facing detail (matched rules, review reasons, quotes) stays in the decision, the
+    Evidence tab and the proof packet.
+    """
     ex = status.exemption
     if ex is None or ex.outcome == DecisionOutcome.NOT_EXEMPT:
         return ["No health exemption was found in your clinical notes."]
-    out = [f"Exemption result: {_words(ex.outcome.value)}." if ex.outcome != DecisionOutcome.EXEMPT
-           else f"Exemption found: {_words(ex.exemption_type.value)}."]
-    for rule in ex.matched_rules:
-        out.append(f"Rule {rule.rule_id} ({_words(rule.category)}) matched: {rule.rationale}")
-    out += [f"Needs a clinician to check: {r}" for r in ex.review_reasons]
+    if ex.outcome == DecisionOutcome.NEEDS_CLINICIAN_REVIEW:
+        return ["Your health notes need a clinician's review before they can count toward an exemption.",
+                "Something in your notes needs your clinician to look at. Please ask them at your next visit."]
+    out = [f"Exemption found: {_words(ex.exemption_type.value)}.",
+           "Your notes show a current health condition that qualifies for this exemption."]
     if findings is not None:
         wanted = set(ex.evidence_finding_ids)
-        out += [f'From your note dated {_day(f.note_date)}: "{f.quote}"' for f in findings.findings
-                if f.finding_id in wanted]
+        dates = sorted({f.note_date for f in findings.findings if f.finding_id in wanted})
+        if dates:
+            out.append(f"This comes from your clinical notes dated {' and '.join(_day(d) for d in dates)}.")
+    out.append("You can see the exact note text in the Evidence tab.")
     return out
 
 
@@ -198,6 +205,10 @@ def _explain_month(status: ProofKitStatus, args: _MonthArgs) -> list[str]:
 
 def _what_if(member: Member, status: ProofKitStatus, args: _WhatIfArgs, rules: WalletRules,
              today: date) -> list[str]:
+    if status.status == OverallStatus.PROTECTED:
+        kind, _, why = (status.protected_by or "").partition(":")
+        how = f"by a {_words(why)} exemption" if kind == "exemption" else f"by {_words(why)}"
+        return [f"You are already protected ({how}), so extra hours or income won't change your result."]
     wallet = status.wallet
     if wallet is None:
         return ["We need your earnings statements before we can try a what-if."]
@@ -228,15 +239,13 @@ def _what_if(member: Member, status: ProofKitStatus, args: _WhatIfArgs, rules: W
 
     added = " and ".join(([f"{args.extra_hours.normalize():f} more hours"] if args.extra_hours else [])
                          + ([f"{money_label(args.extra_income)} more income"] if args.extra_income else []))
-    out = [f"What-if only, nothing was changed: you add {added} in {month_label(month)}."]
+    lead = f"Just checking, nothing is saved. If you add {added} in {month_label(month)}, "
     if after.status == OverallStatus.PROTECTED:
-        out.append(f"You would be protected ({_words(after.protected_by.partition(':')[2])}).")
-    elif after.status == OverallStatus.NEEDS_REVIEW:
-        out.append("You would still need a review before you are protected.")
-    else:
-        out.append("You would still be at risk.")
-        out += _month_facts(next((m for m in months if m.month == month), None), month)[1:]
-    return out
+        return [lead + f"you would be protected ({_words(after.protected_by.partition(':')[2])})."]
+    if after.status == OverallStatus.NEEDS_REVIEW:
+        return [lead + "you would still need a review before you are protected."]
+    return ([lead + "you would still be at risk."]
+            + _month_facts(next((m for m in months if m.month == month), None), month)[1:])
 
 
 def _next_steps(status: ProofKitStatus, member: Member) -> list[str]:
