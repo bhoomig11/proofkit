@@ -303,3 +303,93 @@ def test_does_not_import_app_main(name):
             assert node.module != "app.main", name
             if node.module == "app" or (node.module is None and node.level > 0):
                 assert all(a.name != "main" for a in node.names), name
+
+
+# ─────────────────────────── review follow-ups (gpt-5.6-sol) ───────────────────────────
+class _RecordingAnthropic:
+    """Stub for proofkit.integration.demo.AnthropicClient: records every construction, never calls out."""
+
+    constructed: list[object] = []
+
+    def __init__(self, settings):
+        type(self).constructed.append(settings)
+
+    def complete_json(self, *, task, instructions, untrusted_text=None):  # pragma: no cover - never called
+        raise AssertionError("live client must not be used in tests")
+
+
+@pytest.fixture
+def keyed_demo(monkeypatch):
+    """Pretend an API key is configured, and replace the live client with a recording stub."""
+    import proofkit.integration.demo as demo_mod
+    from proofkit.common.config import Settings
+
+    monkeypatch.delenv("PROOFKIT_DEMO", raising=False)
+    fake = Settings(anthropic_api_key="placeholder-not-a-key", model="placeholder-model", max_tokens=16,
+                    llm_timeout_s=1.0)
+    monkeypatch.setattr(demo_mod, "load_settings", lambda: fake)
+    _RecordingAnthropic.constructed = []
+    monkeypatch.setattr(demo_mod, "AnthropicClient", _RecordingAnthropic)
+    return _RecordingAnthropic
+
+
+def test_upload_never_uses_live_ai_without_opt_in(keyed_demo):
+    from app.upload import upload_llm
+    llm, mode = upload_llm(False)
+    assert mode == "offline-demo"
+    assert not isinstance(llm, keyed_demo)
+    assert keyed_demo.constructed == []
+
+    llm, mode = upload_llm(True)
+    assert mode == "live"
+    assert isinstance(llm, keyed_demo)
+    assert len(keyed_demo.constructed) == 1
+
+
+class _BoomLLM:
+    """LLMClient whose every call fails with a message that quotes (fake) document text."""
+
+    def __init__(self):
+        self.calls: list[str] = []
+
+    def complete_json(self, *, task, instructions, untrusted_text=None):
+        self.calls.append(task)
+        raise RuntimeError("SECRET-DOC-TEXT boom")
+
+
+def test_upload_results_turns_any_llm_failure_into_a_fixed_message(rules, dev, demo_today):
+    from app.upload import to_document, upload_results
+    doc = to_document("../my statement.txt", b"QuickDash Courier\nTotal earnings: $10.00\n", dev.member_id, 0,
+                      rules)
+    wallet, error = upload_results(dev, [doc], _BoomLLM(), rules, demo_today)
+    assert wallet is None
+    assert isinstance(error, str)
+    assert doc.filename in error
+    assert "SECRET-DOC-TEXT" not in error
+    assert "Traceback" not in error
+    assert doc.doc_id not in error
+
+
+def test_sample_queue_dedupes_and_caps():
+    from app.samples import queue_sample
+    original: list[tuple[str, bytes]] = []
+    q = queue_sample(original, "a.csv", b"A")
+    assert q == [("a.csv", b"A")]
+    assert original == []  # returns a new list, input untouched
+
+    q = queue_sample(q, "a.csv", b"A")
+    assert q == [("a.csv", b"A")]  # exact duplicate ignored
+
+    q = queue_sample(q, "b.csv", b"B")
+    assert q == [("a.csv", b"A"), ("b.csv", b"B")]
+
+    q = []
+    for i in range(15):
+        q = queue_sample(q, f"f{i}.csv", bytes([i]))
+    assert len(q) == 10
+    assert q[0] == ("f0.csv", bytes([0]))
+
+    small: list[tuple[str, bytes]] = []
+    for i in range(5):
+        small = queue_sample(small, f"s{i}.csv", bytes([i]), cap=3)
+    assert len(small) == 3
