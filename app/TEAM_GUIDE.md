@@ -72,9 +72,9 @@ Using Kiro? The spec and progress log are in `.kiro/specs/final-ui/` (`requireme
 ## 7. Open ideas (pick one, tell the team)
 - Playwright browser test via the Kiro MCP server, with a report in `.kiro/specs/final-ui/ui-test-report.md`
 - Text/CSV upload (in memory, size-capped; PDF stays off until P2 re-enables it)
-- 🎤 Voice input (stretch: `components.html` can't return the transcript to Python, so it needs a custom component)
+- Voice input (stretch: `components.html` can't return the transcript to Python, so it needs a custom component)
 - SMS reminder preview (≤ 160 characters, first name only)
 - Polish: a demo-tour narration, better mobile layout, Pip animations (respecting reduce motion)
 
 Demo flow for the video (under 3 minutes): Maria (exempt, lupus highlighted) → James (negation struck through,
-protected by hours) → Dev (at risk; drag the what-if to +$60 → Protected 🎈) → SYN-0005 Red team tab → ask the coach a question.
+protected by hours) → Dev (at risk; drag the what-if to +$60 → Protected) → SYN-0005 Red team tab → ask the coach a question.

@@ -32,9 +32,9 @@ WALLET = ROOT / "config" / "wallet_rules.json"
 DISCLAIMER = "ProofKit organizes evidence. MassHealth makes all eligibility determinations."
 HOURS_RULE, INCOME_RULE = Decimal("80"), Decimal("580")   # federal rule: 80 h or 80 x $7.25 per month
 STATUS = {
-    "protected": ("✅", "Protected", "You have what you need to keep your coverage."),
-    "needs_review": ("🔎", "Needs review", "Almost there: one thing needs a person to check it."),
-    "at_risk": ("⚠️", "At risk", "You could lose coverage unless you send more proof in time."),
+    "protected": ("Protected", "You have what you need to keep your coverage."),
+    "needs_review": ("Needs review", "Almost there: one thing needs a person to check it."),
+    "at_risk": ("At risk", "You could lose coverage unless you send more proof in time."),
 }
 STORIES = {
     "SYN-0001": "Lupus in her notes, 74 hours of gig work",
@@ -45,7 +45,7 @@ STORIES = {
 }
 TOUR = ["SYN-0001", "SYN-0002", "SYN-0004", "SYN-0005"]
 
-st.set_page_config(page_title="ProofKit · Coverage Copilot", page_icon="🛡️", layout="wide")
+st.set_page_config(page_title="ProofKit · Coverage Copilot", layout="wide")
 
 
 # ───────────────────────────── data (cached) ─────────────────────────────
@@ -81,12 +81,12 @@ with st.sidebar:
     st.subheader("Who are you helping?")
     for mid in ids:
         m = data.members[mid]
-        label = f"{'▶ ' if st.session_state.member_id == mid else ''}{m.display_name}"
+        label = f"{m.display_name}{' (selected)' if st.session_state.member_id == mid else ''}"
         if st.button(label, key=f"pick-{mid}", use_container_width=True, help=STORIES.get(mid, "")):
             st.session_state.member_id = mid
             st.rerun()
         st.caption(STORIES.get(mid, ""))
-    if st.button("🎬 Demo tour: next person", use_container_width=True):
+    if st.button("Demo tour: next person", use_container_width=True):
         cur = st.session_state.member_id
         st.session_state.member_id = TOUR[(TOUR.index(cur) + 1) % len(TOUR)] if cur in TOUR else TOUR[0]
         st.rerun()
@@ -104,7 +104,7 @@ st.markdown(build_css(theme, large_text=large, comfortable=roomy, reduce_motion=
 view = member_view(st.session_state.member_id)
 status, member = view.status, view.member
 llm, is_live = coach_llm(live)
-icon, word, meaning = STATUS[status.status.value]
+word, meaning = STATUS[status.status.value]
 
 
 def card(html_body: str) -> None:
@@ -126,14 +126,14 @@ with main:
             chips.append(f"<span class='pk-chip'>Protected by: {escape_plain(how)}</span>")
         st.markdown(
             f"<div role='status' aria-live='polite'><h2 class='pk-status-{status.status.value}' style='margin:0'>"
-            f"{icon} {escape_plain(member.display_name)} is {word.lower()}</h2>"
+            f"{escape_plain(member.display_name)} is {word.lower()}</h2>"
             f"<p style='margin:.2rem 0 .6rem'>{escape_plain(meaning)}</p>{' '.join(chips)}</div>",
             unsafe_allow_html=True)
     if status.status.value == "protected" and not calm and st.session_state.get("cheered") != member.member_id:
         st.session_state.cheered = member.member_id
         st.balloons()
 
-    tabs = st.tabs(["✅ Next steps", "💡 Why", "📄 Evidence", "⏱️ Hours & money", "📦 Proof packet", "🛡️ Red team"])
+    tabs = st.tabs(["Next steps", "Why", "Evidence", "Hours & money", "Proof packet", "Red team"])
 
     # ── next steps
     with tabs[0]:
@@ -141,7 +141,7 @@ with main:
             st.success("Nothing to do right now. Keep your proof packet handy for renewal.")
         for i, item in enumerate(sorted(status.action_items, key=lambda a: a.priority)):
             done = st.checkbox(item.title, key=f"act-{member.member_id}-{i}")
-            st.caption(("✔ Done. " if done else "") + item.detail + (f" Due {long_date(item.due)}." if item.due else ""))
+            st.caption(("Done. " if done else "") + item.detail + (f" Due {long_date(item.due)}." if item.due else ""))
         st.caption(f"Renewal date: {long_date(member.renewal_date)}")
 
     # ── why
@@ -149,8 +149,8 @@ with main:
         ex = status.exemption
         if ex is not None:
             st.markdown("#### Medical exemption check")
-            st.write({"exempt": "✅ Exempt (medically frail)", "not_exempt": "Not exempt from the notes",
-                      "needs_clinician_review": "🔎 A clinician needs to confirm"}[ex.outcome.value])
+            st.write({"exempt": "Exempt (medically frail)", "not_exempt": "Not exempt from the notes",
+                      "needs_clinician_review": "A clinician needs to confirm"}[ex.outcome.value])
             for mr in ex.matched_rules:
                 st.text(f"• {mr.rule_id}: {mr.rationale}")
             for reason in ex.review_reasons:
@@ -196,22 +196,22 @@ with main:
             st.info("No earnings statements yet.")
         else:
             for m in w.months:
-                st.markdown(f"**{month_long(m.month)}** {'· 🏅 proof badge' if m.qualifies else ''}")
+                st.markdown(f"**{month_long(m.month)}** {'· proof complete' if m.qualifies else ''}")
                 c1, c2 = st.columns(2)
                 c1.progress(min(float(m.total_hours / HOURS_RULE), 1.0), text=f"{m.total_hours} of 80 hours")
                 c2.progress(min(float(m.total_income / INCOME_RULE), 1.0),
                             text=f"{format_money(m.total_income)} of $580.00")
                 if not m.qualifies:
                     st.caption(f"Short by {m.shortfall_hours} hours or {format_money(m.shortfall_income)}.")
-            st.markdown("#### 🔮 What if…")
+            st.markdown("#### What if…")
             month = target_month(w)
             st.caption(f"Try adding work in {month_long(month)}. This is a preview only: your real result does not change.")
             extra_h = st.slider("Extra hours (work, school or volunteering)", 0, 80, 0, key=f"wh-{member.member_id}")
             extra_i = st.slider("Extra income ($)", 0, 600, 0, step=10, key=f"wi-{member.member_id}")
             after = what_if_status(view, wallet_rules, data.today, extra_hours=Decimal(extra_h),
                                    extra_income=Decimal(extra_i), month=month)
-            a_icon, a_word, _ = STATUS[after.status.value]
-            st.markdown(f"**Now:** {icon} {word} → **With this change:** {a_icon} {a_word}")
+            a_word, _ = STATUS[after.status.value]
+            st.markdown(f"**Now:** {word} → **With this change:** {a_word}")
             if after.status.value == "protected" and status.status.value != "protected":
                 st.success("That would be enough. Ask your employer or platform for a statement showing it.")
                 if not calm and st.session_state.get("whatif_cheer") != (member.member_id, extra_h, extra_i):
@@ -223,7 +223,7 @@ with main:
         packet = build_packet_html(member, status, view.findings)
         st.write("One file with your status, monthly proof, evidence quotes and next steps. Bring it to your "
                  "navigator or clinic.")
-        st.download_button("⬇️ Download proof packet (HTML)", packet.encode("utf-8"),
+        st.download_button("Download proof packet (HTML)", packet.encode("utf-8"),
                            file_name=f"proofkit-{member.member_id}.html", mime="text/html")
 
     # ── red team
@@ -250,7 +250,7 @@ with main:
 
 # ───────────────────────────── agent panel ─────────────────────────────
 with side:
-    st.markdown(f"<span class='pk-chip'>{'🟢 Live AI on' if is_live else '⚪ Live AI off: verified facts only'}</span>",
+    st.markdown(f"<span class='pk-chip'>{'Live AI on' if is_live else 'Live AI off: verified facts only'}</span>",
                 unsafe_allow_html=True)
     if live and not is_live:
         st.caption("No API key found, so the coach is running offline.")
