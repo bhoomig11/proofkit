@@ -14,14 +14,14 @@ streamlit run app/main.py                                # opens http://localhos
 ## What's on screen
 | Area | What it shows |
 |---|---|
-| Sidebar | 5 synthetic personas, 🎬 demo tour (Maria → James → Dev → red team), theme (system/light/dark), larger text, more spacing, reduce motion, Live AI switch |
+| Sidebar | 5 synthetic personas, demo tour (Maria → James → Dev → red team), theme (system/light/dark), larger text, more spacing, reduce motion, Live AI switch |
 | Header | Pip the mascot + status (icon + text + color), deadline countdown, what protects the member |
-| ✅ Next steps | Action checklist with due dates |
-| 💡 Why | Exemption decision (rules, review reasons) and the 80 h / $580 check per month |
-| 📄 Evidence | Clinical notes: counted quotes highlighted, denied/ruled-out/family/past struck through; clinician statement |
-| ⏱️ Hours & money | Progress toward 80 h and $580, proof badges, 🔮 what-if sliders (real rules on a copy) |
-| 📦 Proof packet | Escaped HTML download (`proofkit.integration.build_packet_html`) |
-| 🛡️ Red team | Injected instructions found in notes/pay stubs, shown as ignored, with the unchanged result |
+| Next steps | Action checklist with due dates |
+| Why | Exemption decision (rules, review reasons) and the 80 h / $580 check per month |
+| Evidence | Clinical notes: counted quotes highlighted, denied/ruled-out/family/past struck through; clinician statement |
+| Hours & money | Progress toward 80 h and $580, proof badges, what-if sliders (real rules on a copy) |
+| Proof packet | Escaped HTML download (`proofkit.integration.build_packet_html`) |
+| Red team | Injected instructions found in notes/pay stubs, shown as ignored, with the unchanged result |
 | Right panel | Coverage Coach chat: EN/ES/PT/HT, plain language, suggested questions, agent trace, read-aloud |
 
 ## Code map
