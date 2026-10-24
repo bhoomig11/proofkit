@@ -21,18 +21,6 @@
       "finding_id": "F-N-0002-a-1",
       "note_id": "N-0002-a",
       "note_date": "2026-12-02",
-      "condition": "Heart failure",
-      "icd10": "I50.9",
-      "status": "ruled_out",
-      "quote": "R/o CHF",
-      "quote_start": 165,
-      "quote_end": 172,
-      "confidence": 0.9
-    },
-    {
-      "finding_id": "F-N-0002-a-2",
-      "note_id": "N-0002-a",
-      "note_date": "2026-12-02",
       "condition": "Dyspnea",
       "icd10": "R06.09",
       "status": "current",
@@ -40,6 +28,18 @@
       "quote_start": 121,
       "quote_end": 140,
       "confidence": 0.8
+    },
+    {
+      "finding_id": "F-N-0002-a-2",
+      "note_id": "N-0002-a",
+      "note_date": "2026-12-02",
+      "condition": "Heart failure",
+      "icd10": "I50.9",
+      "status": "ruled_out",
+      "quote": "R/o CHF",
+      "quote_start": 165,
+      "quote_end": 172,
+      "confidence": 0.9
     },
     {
       "finding_id": "F-N-0002-b-0",

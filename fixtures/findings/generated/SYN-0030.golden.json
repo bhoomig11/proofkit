@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0030",
+  "notes_processed": [
+    "N-0030-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0030-a-0",
+      "note_id": "N-0030-a",
+      "note_date": "2026-04-19",
+      "condition": "Schizophrenia",
+      "icd10": "F20.9",
+      "status": "family_history",
+      "quote": "Sister with schizophrenia",
+      "quote_start": 406,
+      "quote_end": 431,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0030-a-1",
+      "note_id": "N-0030-a",
+      "note_date": "2026-04-19",
+      "condition": "Bipolar disorder",
+      "icd10": "F31.9",
+      "status": "uncertain",
+      "quote": "Concern for bipolar disorder",
+      "quote_start": 1067,
+      "quote_end": 1095,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0030-a-2",
+      "note_id": "N-0030-a",
+      "note_date": "2026-04-19",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1236,
+      "quote_end": 1247,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0030-a-3",
+      "note_id": "N-0030-a",
+      "note_date": "2026-04-19",
+      "condition": "Anemia",
+      "icd10": "D64.9",
+      "status": "current",
+      "quote": "Anemia",
+      "quote_start": 1365,
+      "quote_end": 1371,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

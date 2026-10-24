@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0035",
+  "notes_processed": [
+    "N-0035-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0035-a-0",
+      "note_id": "N-0035-a",
+      "note_date": "2026-07-10",
+      "condition": "Schizophrenia",
+      "icd10": "F20.9",
+      "status": "family_history",
+      "quote": "Sister with schizophrenia",
+      "quote_start": 346,
+      "quote_end": 371,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0035-a-1",
+      "note_id": "N-0035-a",
+      "note_date": "2026-07-10",
+      "condition": "Rheumatoid arthritis",
+      "icd10": "M06.9",
+      "status": "family_history",
+      "quote": "Mother with rheumatoid arthritis",
+      "quote_start": 373,
+      "quote_end": 405,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0035-a-2",
+      "note_id": "N-0035-a",
+      "note_date": "2026-07-10",
+      "condition": "Asthma",
+      "icd10": "J45.909",
+      "status": "current",
+      "quote": "Asthma, uncomplicated",
+      "quote_start": 980,
+      "quote_end": 1001,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0035-a-3",
+      "note_id": "N-0035-a",
+      "note_date": "2026-07-10",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1184,
+      "quote_end": 1195,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

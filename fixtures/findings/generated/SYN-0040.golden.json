@@ -1,0 +1,46 @@
+{
+  "member_id": "SYN-0040",
+  "notes_processed": [
+    "N-0040-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0040-a-0",
+      "note_id": "N-0040-a",
+      "note_date": "2026-07-08",
+      "condition": "Schizophrenia",
+      "icd10": "F20.9",
+      "status": "family_history",
+      "quote": "Sister with schizophrenia",
+      "quote_start": 307,
+      "quote_end": 332,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0040-a-1",
+      "note_id": "N-0040-a",
+      "note_date": "2026-07-08",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 910,
+      "quote_end": 921,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0040-a-2",
+      "note_id": "N-0040-a",
+      "note_date": "2026-07-08",
+      "condition": "Anemia",
+      "icd10": "D64.9",
+      "status": "current",
+      "quote": "Anemia",
+      "quote_start": 1065,
+      "quote_end": 1071,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

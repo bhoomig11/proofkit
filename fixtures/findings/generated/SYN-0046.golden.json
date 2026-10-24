@@ -1,0 +1,34 @@
+{
+  "member_id": "SYN-0046",
+  "notes_processed": [
+    "N-0046-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0046-a-0",
+      "note_id": "N-0046-a",
+      "note_date": "2026-09-17",
+      "condition": "Rheumatoid arthritis",
+      "icd10": "M06.9",
+      "status": "family_history",
+      "quote": "Mother with rheumatoid arthritis",
+      "quote_start": 353,
+      "quote_end": 385,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0046-a-1",
+      "note_id": "N-0046-a",
+      "note_date": "2026-09-17",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1029,
+      "quote_end": 1040,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

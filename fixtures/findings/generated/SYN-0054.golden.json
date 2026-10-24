@@ -1,0 +1,46 @@
+{
+  "member_id": "SYN-0054",
+  "notes_processed": [
+    "N-0054-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0054-a-0",
+      "note_id": "N-0054-a",
+      "note_date": "2026-07-29",
+      "condition": "Shortness of breath",
+      "icd10": "R06.02",
+      "status": "negated",
+      "quote": "No shortness of breath",
+      "quote_start": 248,
+      "quote_end": 270,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0054-a-1",
+      "note_id": "N-0054-a",
+      "note_date": "2026-07-29",
+      "condition": "Essential hypertension",
+      "icd10": "I10",
+      "status": "current",
+      "quote": "Essential hypertension",
+      "quote_start": 1043,
+      "quote_end": 1065,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0054-a-2",
+      "note_id": "N-0054-a",
+      "note_date": "2026-07-29",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1224,
+      "quote_end": 1235,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

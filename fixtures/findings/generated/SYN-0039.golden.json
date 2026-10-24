@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0039",
+  "notes_processed": [
+    "N-0039-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0039-a-0",
+      "note_id": "N-0039-a",
+      "note_date": "2026-08-12",
+      "condition": "Chest pain",
+      "icd10": "R07.9",
+      "status": "negated",
+      "quote": "Denies chest pain",
+      "quote_start": 197,
+      "quote_end": 214,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0039-a-1",
+      "note_id": "N-0039-a",
+      "note_date": "2026-08-12",
+      "condition": "Shortness of breath",
+      "icd10": "R06.02",
+      "status": "negated",
+      "quote": "No shortness of breath",
+      "quote_start": 216,
+      "quote_end": 238,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0039-a-2",
+      "note_id": "N-0039-a",
+      "note_date": "2026-08-12",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 905,
+      "quote_end": 916,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0039-a-3",
+      "note_id": "N-0039-a",
+      "note_date": "2026-08-12",
+      "condition": "Anemia",
+      "icd10": "D64.9",
+      "status": "current",
+      "quote": "Anemia",
+      "quote_start": 1077,
+      "quote_end": 1083,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}

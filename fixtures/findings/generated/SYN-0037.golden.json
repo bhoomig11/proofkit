@@ -1,0 +1,58 @@
+{
+  "member_id": "SYN-0037",
+  "notes_processed": [
+    "N-0037-a"
+  ],
+  "findings": [
+    {
+      "finding_id": "F-N-0037-a-0",
+      "note_id": "N-0037-a",
+      "note_date": "2026-06-22",
+      "condition": "Shortness of breath",
+      "icd10": "R06.02",
+      "status": "negated",
+      "quote": "No shortness of breath",
+      "quote_start": 288,
+      "quote_end": 310,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0037-a-1",
+      "note_id": "N-0037-a",
+      "note_date": "2026-06-22",
+      "condition": "Schizophrenia",
+      "icd10": "F20.9",
+      "status": "family_history",
+      "quote": "Sister with schizophrenia",
+      "quote_start": 462,
+      "quote_end": 487,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0037-a-2",
+      "note_id": "N-0037-a",
+      "note_date": "2026-06-22",
+      "condition": "Asthma",
+      "icd10": "J45.909",
+      "status": "current",
+      "quote": "Asthma, uncomplicated",
+      "quote_start": 1021,
+      "quote_end": 1042,
+      "confidence": 0.9
+    },
+    {
+      "finding_id": "F-N-0037-a-3",
+      "note_id": "N-0037-a",
+      "note_date": "2026-06-22",
+      "condition": "Prediabetes",
+      "icd10": "R73.03",
+      "status": "current",
+      "quote": "Prediabetes",
+      "quote_start": 1231,
+      "quote_end": 1242,
+      "confidence": 0.9
+    }
+  ],
+  "dropped_ungrounded": 0,
+  "extractor_version": "golden-label"
+}
