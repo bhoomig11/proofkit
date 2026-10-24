@@ -10,13 +10,17 @@ the numbers in the record appear in the source_quote, and it validates against t
 """
 from __future__ import annotations
 
+import base64
+import binascii
 import csv
+import io
 import re
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 from pydantic import ValidationError
+from pypdf import PdfReader
 
 from proofkit.common.grounding import locate_quote
 from proofkit.common.injection import injection_spans, overlaps_injection
@@ -38,6 +42,7 @@ LLM_INSTRUCTIONS = (
 )
 DEFAULT_RULES_PATH = Path(__file__).resolve().parents[3] / "config" / "wallet_rules.json"
 CSV_CONFIDENCE = 1.0
+MAX_TEXT_CHARS = 200_000  # same cap the contract puts on content_text
 UNVERIFIED_CONFIDENCE = 0.5  # below min_record_confidence: kept for the audit trail, excluded and flagged
 _MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
            "November", "December")
@@ -55,17 +60,60 @@ def parse_documents(docs: list[EarningsDocument], member_id: str, llm: LLMClient
                     rules: WalletRules | None = None) -> list[EarningsRecord]:
     """EarningsDocument[] -> EarningsRecord[]. `rules` defaults to config/wallet_rules.json."""
     rules = rules or load_wallet_rules(DEFAULT_RULES_PATH)
+    texts = [_checked_text(d, member_id, rules) for d in docs]  # reject bad uploads before any LLM call
     out: list[EarningsRecord] = []
-    for d in docs:
+    for d, text in zip(docs, texts, strict=True):
         if d.doc_type == DocumentType.CSV:
-            recs = _parse_csv(d, member_id, rules)
-        elif d.doc_type == DocumentType.TEXT:
-            recs = _parse_text(d, d.content_text or "", member_id, llm, rules)
+            recs = _parse_csv(d, text, member_id, rules)
+        elif d.doc_type == DocumentType.IMAGE:
+            recs = []  # ponytail: no OCR yet; images yield no records and build_wallet flags them for review
         else:
-            raise NotImplementedError(d.doc_type)
+            recs = _parse_text(d, text, member_id, llm, rules)
         log.info("parsed doc_id=%s type=%s records=%d", d.doc_id, d.doc_type.value, len(recs))
         out += recs
     return out
+
+
+def _checked_text(doc: EarningsDocument, member_id: str, rules: WalletRules) -> str:
+    """Enforce member, type and size limits, then return the document's text. Raises ValueError on rejection."""
+    if doc.member_id != member_id:
+        raise ValueError(f"doc {doc.doc_id} belongs to another member")
+    if doc.doc_type not in rules.allowed_doc_types:
+        raise ValueError(f"doc {doc.doc_id}: type {doc.doc_type.value} not allowed")
+    binary = doc.doc_type in (DocumentType.PDF, DocumentType.IMAGE)
+    if doc.content_text is not None:
+        if binary or len(doc.content_text.encode()) > rules.max_bytes:
+            raise ValueError(f"doc {doc.doc_id}: bad text upload")
+        return doc.content_text
+    try:
+        data = base64.b64decode(doc.content_b64 or "", validate=True)
+    except binascii.Error as e:
+        raise ValueError(f"doc {doc.doc_id}: content_b64 is not base64") from e
+    if len(data) > rules.max_bytes:
+        raise ValueError(f"doc {doc.doc_id}: larger than {rules.max_bytes} bytes")
+    if doc.doc_type == DocumentType.IMAGE:
+        return ""
+    if doc.doc_type == DocumentType.PDF:
+        return _pdf_text(doc, data, rules)
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError as e:
+        raise ValueError(f"doc {doc.doc_id}: not utf-8 text") from e
+
+
+def _pdf_text(doc: EarningsDocument, data: bytes, rules: WalletRules) -> str:
+    """PDF bytes -> text, in memory only. Over the page cap, unreadable, or too much text -> ValueError."""
+    # ponytail: relies on pypdf's own decompression limits; parse in a subprocess with a memory cap if that's not enough
+    try:
+        reader = PdfReader(io.BytesIO(data))
+        if len(reader.pages) > rules.max_pdf_pages:
+            raise ValueError(f"doc {doc.doc_id}: more than {rules.max_pdf_pages} pages")
+        text = "\n".join(page.extract_text() or "" for page in reader.pages)
+    except Exception as e:  # untrusted bytes: any parser failure is a rejected upload
+        raise ValueError(f"doc {doc.doc_id}: unreadable pdf") from e
+    if len(text) > MAX_TEXT_CHARS:
+        raise ValueError(f"doc {doc.doc_id}: too much text")
+    return text
 
 
 def _parse_text(doc: EarningsDocument, text: str, member_id: str, llm: LLMClient,
@@ -144,10 +192,10 @@ def _record(doc: EarningsDocument, member_id: str, i: int, rules: WalletRules, *
         return None
 
 
-def _parse_csv(doc: EarningsDocument, member_id: str, rules: WalletRules) -> list[EarningsRecord]:
+def _parse_csv(doc: EarningsDocument, text: str, member_id: str, rules: WalletRules) -> list[EarningsRecord]:
     # Row by row on raw lines, so each record's source_quote is the exact line it came from.
     # ponytail: a row longer than 31 days is dropped, not split by month; split it when real exports need that.
-    lines = (doc.content_text or "").splitlines()
+    lines = text.splitlines()
     try:
         header = [h.strip().lower() for h in next(csv.reader(lines[:1]), [])]
     except csv.Error:
