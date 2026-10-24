@@ -220,6 +220,25 @@ def test_serve_handles_malformed_json_and_keeps_going():
     assert second == {"jsonrpc": "2.0", "id": 9, "result": {}}
 
 
+def test_huge_integer_id_is_parse_error_and_loop_continues():
+    # 5000 digits exceeds CPython's int max-str-digits limit (4300), so json.loads raises a plain ValueError,
+    # not a JSONDecodeError. The server must still answer -32700 and keep serving.
+    huge_line = '{"jsonrpc":"2.0","id":' + "9" * 5000 + ',"method":"ping"}'
+    stdin = io.StringIO(huge_line + "\n" + json.dumps(_request("ping", msg_id=7)) + "\n")
+    stdout = io.StringIO()
+    serve(stdin, stdout)
+    out = stdout.getvalue()
+    assert "Traceback" not in out
+    lines = [line for line in out.splitlines() if line.strip()]
+    assert len(lines) == 2
+    first, second = (json.loads(line) for line in lines)
+    assert first["jsonrpc"] == "2.0"
+    assert first["id"] is None
+    assert first["error"]["code"] == -32700
+    assert "result" not in first
+    assert second == {"jsonrpc": "2.0", "id": 7, "result": {}}
+
+
 def test_subprocess_stdio_round_trip():
     messages = [
         _request("initialize", {"protocolVersion": "2025-06-18", "capabilities": {},
