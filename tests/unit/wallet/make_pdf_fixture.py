@@ -1,4 +1,4 @@
-"""Build fixtures/wallet/D-0002-uber-feb-pdf.json: the Uber text fixture rendered as a one-page PDF.
+"""Build fixtures/wallet/D-0002-ridenow-feb-pdf.json: the RideNow text fixture rendered as a one-page PDF.
 
 Run once from the repo root:  .venv/Scripts/python tests/unit/wallet/make_pdf_fixture.py
 Not a test module (pytest only collects test_*.py). Deterministic: rerunning gives the same bytes.
@@ -16,8 +16,8 @@ sys.path[:0] = [str(ROOT), str(ROOT / "src")]
 from proofkit.contracts import EarningsDocument  # noqa: E402
 from tests.unit.wallet.test_parse import pdf_bytes  # noqa: E402
 
-SOURCE = ROOT / "fixtures" / "earnings_docs" / "D-0002-uber-feb.json"
-TARGET = ROOT / "fixtures" / "wallet" / "D-0002-uber-feb-pdf.json"
+SOURCE = ROOT / "fixtures" / "earnings_docs" / "D-0002-ridenow-feb.json"
+TARGET = ROOT / "fixtures" / "wallet" / "D-0002-ridenow-feb-pdf.json"
 
 
 def main() -> None:
@@ -26,7 +26,7 @@ def main() -> None:
     # pdf_bytes writes each line as a literal string; these characters would need PDF escaping.
     if any(c in text for c in "()\\"):
         raise SystemExit("source text needs PDF string escaping; pdf_bytes does not do that")
-    doc = EarningsDocument(doc_id="D-0002-uber-feb-pdf", member_id=src.member_id, filename="uber-feb.pdf",
+    doc = EarningsDocument(doc_id="D-0002-ridenow-feb-pdf", member_id=src.member_id, filename="ridenow-feb.pdf",
                            doc_type="pdf", content_b64=base64.b64encode(pdf_bytes(text)).decode())
     TARGET.write_text(json.dumps(doc.model_dump(mode="json", exclude_none=True), indent=2) + "\n")
     print(f"wrote {TARGET.relative_to(ROOT)}")

@@ -1,7 +1,0 @@
-{
-  "doc_id": "D-0001-ic-feb",
-  "member_id": "SYN-0001",
-  "filename": "instacart_feb.csv",
-  "doc_type": "csv",
-  "content_text": "platform,period_start,period_end,hours,gross_pay\ninstacart,2027-02-01,2027-02-28,22,298.10\n"
-}

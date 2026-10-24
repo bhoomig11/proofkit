@@ -1,9 +1,9 @@
 [
   {
-    "record_id": "R-D-0005-dd-feb-0",
+    "record_id": "R-D-0005-qd-feb-0",
     "member_id": "SYN-0005",
-    "source_doc_id": "D-0005-dd-feb",
-    "platform": "doordash",
+    "source_doc_id": "D-0005-qd-feb",
+    "platform": "quickdash",
     "period_start": "2027-02-01",
     "period_end": "2027-02-28",
     "hours": "30.00",

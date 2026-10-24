@@ -31,7 +31,7 @@ def test_zero_docs_gives_empty_months_but_deadlines(rules):
 
 def test_four_weekly_statements_sum_to_the_month(rules):
     weeks = [(1, 7), (8, 14), (15, 21), (22, 28)]
-    docs = [csv_doc(f"wk{i}", f"doordash,2027-02-{a:02},2027-02-{b:02},20,150.00") for i, (a, b) in enumerate(weeks)]
+    docs = [csv_doc(f"wk{i}", f"quickdash,2027-02-{a:02},2027-02-{b:02},20,150.00") for i, (a, b) in enumerate(weeks)]
     (m,) = build_wallet(MEMBER, docs, FakeLLM({}), rules, TODAY).months
     assert (m.total_hours, m.total_income, m.basis, m.needs_review) == (D("80.00"), D("600.00"),
                                                                         ComplianceBasis.HOURS, False)
@@ -48,12 +48,12 @@ def test_unread_image_flags_the_verification_month(rules):
 
 def test_image_flag_is_added_to_an_existing_month(rules):
     img = EarningsDocument(doc_id="img1", member_id="SYN-0001", filename="p.png", doc_type="image", content_b64="iVBO")
-    docs = [csv_doc("c1", "doordash,2027-02-01,2027-02-28,90,700.00"), img]
+    docs = [csv_doc("c1", "quickdash,2027-02-01,2027-02-28,90,700.00"), img]
     (m,) = build_wallet(MEMBER, docs, FakeLLM({}), rules, TODAY).months
     assert m.qualifies and m.total_hours == D("90.00") and m.needs_review
 
 
 def test_rejected_upload_is_not_swallowed(rules):
     with pytest.raises(ValueError):
-        build_wallet(MEMBER, [csv_doc("c1", "doordash,2027-02-01,2027-02-28,90,700.00", member="SYN-0002")],
+        build_wallet(MEMBER, [csv_doc("c1", "quickdash,2027-02-01,2027-02-28,90,700.00", member="SYN-0002")],
                      FakeLLM({}), rules, TODAY)

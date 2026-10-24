@@ -1,8 +1,8 @@
 # Tasks: pdf-uploads
 
 - [x] 1. RED: config gate test `test_shipped_rules_allow_pdf_uploads` (R1.1)
-- [x] 2. RED: PDF fixture script `tests/unit/wallet/make_pdf_fixture.py`, which writes `fixtures/wallet/D-0002-uber-feb-pdf.json`
-- [x] 3. RED: parity test `test_pdf_version_of_uber_fixture_gives_same_month_as_text` (R2)
+- [x] 2. RED: PDF fixture script `tests/unit/wallet/make_pdf_fixture.py`, which writes `fixtures/wallet/D-0002-ridenow-feb-pdf.json`
+- [x] 3. RED: parity test `test_pdf_version_of_ridenow_fixture_gives_same_month_as_text` (R2)
 - [x] 4. RED: in-memory decompression-bomb test `test_decompression_bomb_pdf_is_rejected` (R3.1, R3.2, R3.4)
 - [x] 5. RED: Hypothesis split properties in `test_split_properties.py` (R4.1 to R4.5)
 - [ ] 6. RED: CSV version of the split properties (R4.6)

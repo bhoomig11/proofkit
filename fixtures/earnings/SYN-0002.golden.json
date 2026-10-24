@@ -1,9 +1,9 @@
 [
   {
-    "record_id": "R-D-0002-uber-feb-0",
+    "record_id": "R-D-0002-ridenow-feb-0",
     "member_id": "SYN-0002",
-    "source_doc_id": "D-0002-uber-feb",
-    "platform": "uber",
+    "source_doc_id": "D-0002-ridenow-feb",
+    "platform": "ridenow",
     "period_start": "2027-02-01",
     "period_end": "2027-02-28",
     "hours": "92.50",

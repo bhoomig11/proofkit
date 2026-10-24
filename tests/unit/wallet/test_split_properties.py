@@ -62,9 +62,9 @@ def _over_24(start: date, end: date, hours: Decimal | None) -> bool:
 def _parse(start, end, income, hours):
     """A text statement that writes every number and date, plus an LLM that quotes it faithfully."""
     quote = (f"Hours worked: {hours}\n" if hours is not None else "") + f"Earnings: ${income:,}"
-    text = f"Upwork statement\nPeriod: {start:%m/%d/%Y} - {end:%m/%d/%Y}\n{quote}\n"
+    text = f"FreelanceYard statement\nPeriod: {start:%m/%d/%Y} - {end:%m/%d/%Y}\n{quote}\n"
     doc = EarningsDocument(doc_id="t1", member_id=MEMBER, filename="u.txt", doc_type="text", content_text=text)
-    llm = llm_one(platform="upwork", period_start=start.isoformat(), period_end=end.isoformat(),
+    llm = llm_one(platform="freelanceyard", period_start=start.isoformat(), period_end=end.isoformat(),
                   hours=None if hours is None else str(hours), gross_income=str(income), source_quote=quote)
     return parse_documents([doc], MEMBER, llm, rules=RULES), quote
 
