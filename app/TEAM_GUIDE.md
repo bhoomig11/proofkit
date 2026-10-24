@@ -28,30 +28,41 @@ New sign-ups work too: they land on a welcome page and can explore Maria as an e
 
 ## 2. What the app does today (user flow)
 ```
-Sign in / Create account ──▶ Nav bar: RenewRight · section links · Accessibility menu · user menu (account details, Sign out)
+Sign-in page: "Welcome to RenewRight" · Sign in / Create account · "Try a demo" (5 one-click profiles)
    │
-   ├─ demo account ──▶ Dashboard for that member
-   │                     top:      status circle (green = protected, red = not) + "Maria is protected" + deadline + "Protected by"
-   │                     sections (nav bar): Next steps · Why · Evidence · Hours & money (+ what-if) · Proof packet · Red team
-   │                     Coverage Coach: floating button bottom-right → opens a chat panel on the right edge
-   └─ new account ───▶ Welcome / onboarding ──▶ "Explore an example member" (Maria, read-only)
-Accessibility menu (nav bar, always): theme system/light/dark · larger text · more spacing · reduce motion · Live AI
+   ├─ demo profile ──▶ that person's dashboard (their fixture documents preloaded)
+   └─ new account ───▶ OWN empty profile (SYN-1001, 1002, …; name + renewal date from sign-up)
+                        "Rosa is at risk · Add your documents" ──▶ Documents ──▶ status updates from her own docs
+Nav bar (white + teal): RenewRight · sections · Accessibility menu · user menu (member ID, status, renewal, Sign out)
+Sections: Next steps · Documents · Why · Evidence · Hours & money (+ what-if) · Proof packet · Red team (SYN-0005 only)
+Coverage Coach: floating button bottom-right → chat panel on the right edge
+Live AI (Accessibility menu): off = reads the sample documents offline; on = reads any document (needs an API key)
 ```
 
 ## 3. How the code fits together
 | File | Job |
 |---|---|
-| `app/main.py` | The page: `render_navbar()`, `render_auth()`, `render_onboarding()`, `render_dashboard(member_id, example=…)` |
-| `app/auth.py` | `AccountStore.sign_in / sign_up`, salted PBKDF2 hashes, the 5 `DEMO_LOGINS`. Sign-ups go to `app/accounts.generated.json` (gitignored) |
-| `app/state.py` | `build_member_view()`: extraction → decision → statement → wallet → status, keeping the findings for the UI |
-| `app/data.py`, `app/offline.py` | Load the synthetic fixtures; offline replay "LLM" (deterministic, free) |
-| `app/whatif.py` | What-if: real wallet rules on a copy; the real status never changes |
-| `app/coach_widget.py` | Coverage Coach shell: floating launcher, right-side panel, open/close state, its own CSS |
-| `app/agent_panel.py` | Coverage Coach chat body behind a `ChatBackend` protocol (default: `proofkit.integration.ask_coach`) |
-| `app/theme.py`, `app/a11y.py` | Light/dark design tokens (tested for WCAG 4.5:1 contrast), CSS, Pip the mascot |
-| `app/format.py`, `app/highlight.py` | Money/dates in plain words; safe escaping and quote highlighting |
+| `app/main.py` | Thin router: page config, CSS, nav bar, then sign-in page or dashboard + Coverage Coach |
+| `app/ui/navbar.py` | Nav bar: brand, section links, Accessibility menu, user menu |
+| `app/ui/auth_page.py` | Sign in / Create account (name, email, password, renewal date), one-click demo cards |
+| `app/ui/dashboard.py` | Status header (green/red circle) + every section; `sections_for(member_id)` |
+| `app/ui/documents.py` | Documents section: clinical-note upload (.txt) + sample notes; pay-statement slot (Karthik) |
+| `app/ui/extras.py` | Optional hooks for plug-in modules (`app/upload.py`, `app/samples.py`, `app/metrics.py`, `app/sms_card.py`) |
+| `app/ui/common.py` | Shared constants, per-member document store (session), `view_for()` (cached pipeline run) |
+| `app/ui/style.py` | Static page CSS (nav bar, borderless buttons, status circle) |
+| `app/profile.py` | New-user records (`next_member_id`, `new_member`), note-upload validation, sample notes |
+| `app/auth.py` | `AccountStore.sign_in / sign_up`, salted PBKDF2 hashes, 5 `DEMO_LOGINS`; accounts in `app/accounts.generated.json` (gitignored) |
+| `app/state.py` | `build_view(member, notes, documents, …)`: the pipeline on any member's own documents |
+| `app/data.py`, `app/offline.py` | Synthetic fixtures; offline replay "LLM" (reads the sample documents, no key) |
+| `app/whatif.py` | What-if: real wallet rules on a copy |
+| `app/coach_widget.py`, `app/agent_panel.py` | Coverage Coach (owned end to end by its owner, see lane C) |
+| `app/theme.py`, `app/a11y.py`, `app/format.py`, `app/highlight.py` | Tokens (teal, WCAG-tested), Pip, plain formatting, safe escaping |
 | `src/proofkit/integration/packet.py` | Downloadable, escaped HTML proof packet |
-| `src/proofkit/integration/coach.py` | Coverage Coach brain: routes to read-only tools, computes facts, words them |
+
+**Plug-ins (Karthik's `final/ui-extras`, merged):** wired through `app/ui/extras.py`, no `main.py` edits.
+`render_upload` (Documents) returns the statements it processed, and they're added to the member's documents, so the
+status updates end to end (deduped by content). `render_sample_gallery` sits under it, `render_metric_tiles` under the
+status header, and `render_sms_card` at the end of Next steps.
 
 (The Python package is still called `proofkit`; only the product name changed.)
 
@@ -105,5 +116,5 @@ used. The UI spec and log so far: `.kiro/specs/final-ui/`.
 
 ## 8. Demo video (under 3 minutes)
 Sign in as Maria (exempt, lupus quote highlighted) → sign out and in as James (negation struck through, protected by
-hours) → Dev (at risk; drag the what-if to +$60 → Protected) → Red team account (injections ignored) → ask Coverage
+hours) → Dev (at risk; drag the what-if to +$60: Protected) → Red team account (injections ignored) → ask Coverage
 Coach a question in Spanish.

@@ -10,6 +10,21 @@
       "env": {},
       "disabled": false,
       "autoApprove": []
+    },
+    "renewright": {
+      "command": "python",
+      "args": [
+        ".kiro/mcp/renewright.py"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "list_members",
+        "member_status",
+        "wallet_months",
+        "sms_reminder",
+        "triage"
+      ]
     }
   }
 }

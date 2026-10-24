@@ -14,6 +14,7 @@ import json
 import re
 import secrets
 from dataclasses import dataclass
+from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
@@ -21,6 +22,7 @@ ITERATIONS = 200_000
 MIN_PASSWORD = 8
 EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$")
 DEFAULT_STORE = Path(__file__).resolve().parent / "accounts.generated.json"
+LEGACY_TODAY = date(2027, 3, 1)   # demo date; old accounts get a renewal 90 days after it
 
 DEMO_LOGINS: tuple[dict[str, str], ...] = (
     {"name": "Maria", "email": "maria@example.com", "password": "maria-demo-2027", "member_id": "SYN-0001"},
@@ -39,7 +41,8 @@ class AuthError(ValueError):
 class Account:
     name: str
     email: str
-    member_id: str | None      # linked synthetic record; None for a brand-new sign-up
+    member_id: str | None      # the user's synthetic record (demo persona, or SYN-1001+ for sign-ups)
+    renewal_date: date | None = None   # set for sign-ups; demo personas use their fixture record
 
 
 def hash_password(password: str, *, salt: bytes | None = None) -> str:
@@ -92,12 +95,32 @@ class AccountStore:
         for rec in self._all():
             if rec.get("email") == email:
                 if verify_password(password, str(rec.get("hash", ""))):
-                    return Account(name=str(rec["name"]), email=email, member_id=rec.get("member_id"))
+                    if not rec.get("member_id"):          # account made before profiles existed
+                        rec = self._upgrade_legacy(email)
+                    renewal = rec.get("renewal_date")
+                    return Account(name=str(rec["name"]), email=email, member_id=rec.get("member_id"),
+                                   renewal_date=date.fromisoformat(renewal) if renewal else None)
                 return None
         hash_password(password)  # spend similar time for unknown emails (no account probing by timing)
         return None
 
-    def sign_up(self, name: str, email: str, password: str) -> Account:
+    def _upgrade_legacy(self, email: str) -> dict:
+        """Give an old sign-up (no member record) its own member ID and a default renewal date; save it."""
+        from datetime import timedelta
+
+        from app.profile import next_member_id
+
+        saved = self._saved()
+        taken = [str(r.get("member_id")) for r in self._all() if r.get("member_id")]
+        for rec in saved:
+            if rec.get("email") == email and not rec.get("member_id"):
+                rec["member_id"] = next_member_id(taken)
+                rec["renewal_date"] = rec.get("renewal_date") or (LEGACY_TODAY + timedelta(days=90)).isoformat()
+                self.path.write_text(json.dumps(saved, indent=2))
+                return rec
+        raise AuthError("Account not found.")
+
+    def sign_up(self, name: str, email: str, password: str, renewal_date: date) -> Account:
         name, email = " ".join(name.split()), _normal(email)
         if not name or len(name) > 80:
             raise AuthError("Please enter your name (up to 80 characters).")
@@ -107,7 +130,11 @@ class AccountStore:
             raise AuthError(f"Use a password with at least {MIN_PASSWORD} characters.")
         if any(rec.get("email") == email for rec in self._all()):
             raise AuthError("An account with this email already exists. Try signing in.")
+        from app.profile import next_member_id   # local import: profile depends on app.data only
+
         saved = self._saved()
-        saved.append({"name": name, "email": email, "member_id": None, "hash": hash_password(password)})
+        member_id = next_member_id([str(r.get("member_id")) for r in self._all() if r.get("member_id")])
+        saved.append({"name": name, "email": email, "member_id": member_id, "renewal_date": renewal_date.isoformat(),
+                      "hash": hash_password(password)})
         self.path.write_text(json.dumps(saved, indent=2))
-        return Account(name=name, email=email, member_id=None)
+        return Account(name=name, email=email, member_id=member_id, renewal_date=renewal_date)
