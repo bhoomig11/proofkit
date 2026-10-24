@@ -82,7 +82,7 @@ def _read_aloud_html(answer: str, language: str) -> str:
     text = _safe_json_string(answer)
     tag = _safe_json_string(language_tags[language])
     return f"""<!doctype html><html><body style="margin:0;background:transparent">
-<button id="speak" aria-label="Read this answer aloud" style="min-height:44px;padding:8px 12px">🔊 Read aloud</button>
+<button id="speak" aria-label="Read this answer aloud" style="min-height:44px;padding:8px 12px">Read aloud</button>
 <script>
 const text={text}; const language={tag};
 document.getElementById('speak').addEventListener('click', () => {{
