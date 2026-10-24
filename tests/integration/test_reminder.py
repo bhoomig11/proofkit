@@ -532,3 +532,63 @@ def test_reminder_module_is_pure():
     assert not banned, banned
     calls = {getattr(n.func, "attr", getattr(n.func, "id", None)) for n in ast.walk(tree) if isinstance(n, ast.Call)}
     assert not calls & BANNED_CALLS, calls & BANNED_CALLS
+
+
+# ─────────────────────────── security review: id binding and decimal context ───────────────────────────
+def _sms_fragments(msg: str) -> list[str]:
+    """The would-be SMS split into its greeting and sentence fragments (anything 6+ chars is checked)."""
+    pieces = re.split(r"(?<=[,.])\s+", msg)
+    return [msg] + [p.strip() for p in pieces if len(p.strip()) >= 6]
+
+
+@pytest.mark.parametrize("case", ["member_vs_status", "wallet_vs_member", "exemption_vs_member"])
+def test_member_id_mismatch_raises_before_rendering(personas, case):
+    """A status that belongs to someone else must never be rendered for this member.
+
+    For each case, the 'would-be' SMS is rendered from a consistent copy of the same inputs (every id
+    rewritten to one value); the ValueError message must not contain any of its text.
+    """
+    dev, dev_status, _ = personas["SYN-0004"]
+    _, james_status, _ = personas["SYN-0002"]
+
+    if case == "member_vs_status":
+        status = james_status
+        consistent_member = Member.model_validate({**dev.model_dump(), "member_id": "SYN-0002"})
+        consistent_status = james_status
+    elif case == "wallet_vs_member":
+        status = ProofKitStatus.model_validate({**dev_status.model_dump(), "wallet": james_status.wallet.model_dump()})
+        consistent_member = dev
+        consistent_status = ProofKitStatus.model_validate(
+            {**dev_status.model_dump(),
+             "wallet": {**james_status.wallet.model_dump(), "member_id": dev.member_id}})
+    else:
+        status = ProofKitStatus.model_validate(
+            {**dev_status.model_dump(), "exemption": james_status.exemption.model_dump()})
+        consistent_member = dev
+        consistent_status = ProofKitStatus.model_validate(
+            {**dev_status.model_dump(),
+             "exemption": {**james_status.exemption.model_dump(), "member_id": dev.member_id}})
+
+    would_be = sms_reminder(consistent_member, consistent_status)
+    assert would_be.startswith("Hi Dev,")
+
+    with pytest.raises(ValueError) as excinfo:
+        sms_reminder(dev, status)
+    text = str(excinfo.value)
+    for fragment in _sms_fragments(would_be):
+        assert fragment not in text, f"would-be SMS text {fragment!r} leaked into the error {text!r}"
+
+
+def test_output_does_not_depend_on_ambient_decimal_context(personas):
+    """R6/R7: money formatting must not depend on the caller's decimal context (precision or rounding)."""
+    import decimal
+
+    member, status, _ = personas["SYN-0004"]
+    default = sms_reminder(member, status)
+    with decimal.localcontext() as ctx:
+        ctx.prec = 3
+        ctx.rounding = decimal.ROUND_FLOOR
+        hostile = sms_reminder(member, status)
+    assert hostile == default
+    assert "$60.00 short" in default
+    assert "$60.00 short" in hostile
