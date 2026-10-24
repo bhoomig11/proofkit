@@ -17,7 +17,7 @@ from proofkit.contracts import (
     OverallStatus,
     ProofKitStatus,
 )
-from proofkit.integration.packet import render_packet
+from proofkit.integration.proof_packet import render_packet
 
 
 MEMBER_ID = "SYN-0001"

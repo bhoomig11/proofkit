@@ -15,7 +15,7 @@ from proofkit.contracts import (
     ProofKitStatus,
     WalletResult,
 )
-from proofkit.integration.packet import render_packet
+from proofkit.integration.proof_packet import render_packet
 
 
 CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src data:"

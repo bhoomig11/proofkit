@@ -4,6 +4,8 @@
 
 The Proof Packet renderer will be implemented in `src/proofkit/integration/packet.py` as a deterministic, side-effect-free HTML serialization boundary:
 
+module renamed to proof_packet.py to coexist with the UI's packet.py
+
 ```python
 def render_packet(
     member: Member,

@@ -22,8 +22,8 @@ from proofkit.contracts import (
     ProofKitStatus,
     WalletResult,
 )
-from proofkit.integration import packet as packet_module
-from proofkit.integration.packet import render_packet
+from proofkit.integration import proof_packet as packet_module
+from proofkit.integration.proof_packet import render_packet
 
 
 MEMBER_ID = "SYN-0001"
