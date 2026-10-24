@@ -51,7 +51,7 @@ def assert_printable_ascii(msg: object) -> None:
 
 
 # ─────────────────────────── 1. English is unchanged ───────────────────────────
-def test_default_and_explicit_en_unchanged(personas):
+def test_default_and_explicit_en_unchanged(personas):  # noqa: F811
     for member_id in PERSONA_IDS:
         member, status, _ = personas[member_id]
         default = sms_reminder(member, status)
@@ -61,7 +61,7 @@ def test_default_and_explicit_en_unchanged(personas):
 
 # ─────────────────────────── 2. unknown languages ───────────────────────────
 @pytest.mark.parametrize("lang", ["fr", "", "EN ", "EN", " es", "pt-BR", None, "None", "none", "null"])
-def test_unknown_language_raises(personas, lang):
+def test_unknown_language_raises(personas, lang):  # noqa: F811
     member, status, _ = personas["SYN-0004"]
     with pytest.raises(ValueError):
         sms_reminder(member, status, lang)
@@ -69,7 +69,7 @@ def test_unknown_language_raises(personas, lang):
 
 # ─────────────────────────── 3. es / pt rules per persona ───────────────────────────
 @pytest.mark.parametrize("lang", I18N_LANGS)
-def test_spanish_and_portuguese_rules_for_every_persona(personas, lang):
+def test_spanish_and_portuguese_rules_for_every_persona(personas, lang):  # noqa: F811
     for member_id in PERSONA_IDS:
         member, status, bundle = personas[member_id]
         msg = sms_reminder(member, status, lang)
@@ -89,7 +89,7 @@ def test_spanish_and_portuguese_rules_for_every_persona(personas, lang):
 
 # ─────────────────────────── 4. Dev, AT_RISK ───────────────────────────
 @pytest.mark.parametrize("lang, greeting", [("es", "Hola Dev,"), ("pt", "Ola Dev,")])
-def test_dev_at_risk_es_and_pt(personas, lang, greeting):
+def test_dev_at_risk_es_and_pt(personas, lang, greeting):  # noqa: F811
     member, status, _ = personas["SYN-0004"]
     msg = sms_reminder(member, status, lang)
     assert_printable_ascii(msg)
