@@ -1,0 +1,215 @@
+{
+  "pbtResults": {
+    "6.1 Implement Properties 3, 5, 7, and 10 in one test file": {
+      "status": "passed",
+      "lastRunTimestamp": 1792877330683
+    }
+  },
+  "executionHistory": {
+    "1.1 Implement highest-priority script neutralization test-first": [
+      {
+        "executionId": "42c5afaa-bf5a-455b-80a3-1f41a2d793ea",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792874631056
+      },
+      {
+        "executionId": "42c5afaa-bf5a-455b-80a3-1f41a2d793ea",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792874635840
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792875315794
+      }
+    ],
+    "1.2 Enforce exact CSP and no-active-content guarantees test-first": [
+      {
+        "executionId": "42c5afaa-bf5a-455b-80a3-1f41a2d793ea",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792874632788
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792875318747
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792875734663
+      }
+    ],
+    "2.1 Implement sorted, merged evidence highlights test-first": [
+      {
+        "executionId": "42c5afaa-bf5a-455b-80a3-1f41a2d793ea",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792874632924
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792875737378
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792875910430
+      }
+    ],
+    "2.2 Implement invalid-offset and missing-note fallbacks test-first": [
+      {
+        "executionId": "42c5afaa-bf5a-455b-80a3-1f41a2d793ea",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792874633030
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792875912765
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792876092453
+      }
+    ],
+    "4.1 Implement overall status and privacy-minimized identity test-first": [
+      {
+        "executionId": "42c5afaa-bf5a-455b-80a3-1f41a2d793ea",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792874633105
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792876094931
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792876270812
+      }
+    ],
+    "4.2 Implement monthly compliance and wallet evidence test-first": [
+      {
+        "executionId": "42c5afaa-bf5a-455b-80a3-1f41a2d793ea",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792874633168
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792876272954
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792876462970
+      }
+    ],
+    "4.3 Implement statement, deadline, action, and disclaimer rendering test-first": [
+      {
+        "executionId": "42c5afaa-bf5a-455b-80a3-1f41a2d793ea",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792874633234
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792876465298
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792876634224
+      }
+    ],
+    "4.4 Assemble a complete deterministic packet test-first": [
+      {
+        "executionId": "42c5afaa-bf5a-455b-80a3-1f41a2d793ea",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792874633304
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792876636624
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792876973935
+      }
+    ],
+    "6.1 Implement Properties 3, 5, 7, and 10 in one test file": [
+      {
+        "executionId": "42c5afaa-bf5a-455b-80a3-1f41a2d793ea",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792874633374
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792876976384
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792877204811
+      }
+    ],
+    "8.1 Wire and harden the final public renderer against the scoped suite": [
+      {
+        "executionId": "42c5afaa-bf5a-455b-80a3-1f41a2d793ea",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792874633480
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792877207840
+      },
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792877357677
+      }
+    ],
+    "1. Establish the secure HTML rendering boundary (approximately 4 minutes)": [
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792875734736
+      }
+    ],
+    "2. Implement evidence highlighting and safe fallbacks (approximately 5 minutes)": [
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792876092601
+      }
+    ],
+    "4. Implement the packet presentation sections (approximately 8 minutes)": [
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792876974013
+      }
+    ],
+    "6. Add the focused property suite (approximately 5 minutes)": [
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792877204870
+      }
+    ],
+    "8. Complete integration and focused hardening (approximately 3 minutes)": [
+      {
+        "executionId": "4cc813fc-4b3b-4987-8694-5831dec90057",
+        "chatSessionId": "sess_638e9a76-6aa2-4777-9a7a-49808c85e8ac",
+        "timestamp": 1792877357733
+      }
+    ]
+  }
+}
