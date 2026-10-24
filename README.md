@@ -22,8 +22,8 @@ The state is building tools for the agency. ProofKit is a tool for the *member* 
 ## Team
 | Role | Person | Owns |
 |------|--------|------|
-| P1A: Note Understanding | ___ | `src/proofkit/extraction/` |
-| P1B: Exemption Reasoning + Eval | ___ | `src/proofkit/reasoning/`, `eval/` |
+| P1A: Note Understanding | @arshmehar | `src/proofkit/extraction/` |
+| P1B: Exemption Reasoning + Eval | @bhoomig | `src/proofkit/reasoning/`, `eval/` |
 | P2: Gig-Hours Wallet | ___ | `src/proofkit/wallet/` |
 | FINAL: Integration + UI (everyone, last 4–5h) | all | `src/proofkit/integration/`, `app/` |
 
