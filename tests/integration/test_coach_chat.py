@@ -62,3 +62,16 @@ def test_live_route_to_an_unknown_term_falls_back_safely():
     reply = ask("what does protected mean", llm=llm)
     assert reply.used_fallback and reply.tool == "explain_term"
     assert reply.facts[0].startswith("Protected means")
+
+
+def test_greeting_uses_the_first_name_when_known():
+    reply = ask("hello", "SYN-0001")  # display name "Maria (synthetic)"
+    assert reply.facts[0] == "Hi Maria, I'm Coverage Coach."
+
+
+@pytest.mark.parametrize("display_name", ["<script>x</script>", "12345", "(synthetic)", "   "])
+def test_greeting_leaves_out_a_name_it_cannot_trust(display_name):
+    c = _context("SYN-0001", FakeLLM({}))
+    member = c.member.model_copy(update={"display_name": display_name})
+    reply = ask_coach("hi", member=member, status=c.status, llm=c.llm, wallet_rules=c.wallet_rules, today=c.today)
+    assert reply.facts[0] == "Hi, I'm Coverage Coach."

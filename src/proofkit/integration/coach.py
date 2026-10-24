@@ -293,10 +293,18 @@ def _next_steps(status: ProofKitStatus, member: Member) -> list[str]:
     return [f"{a.title}: {a.detail}" + (f" (by {_day(a.due)})" if a.due else "") for a in status.action_items]
 
 
-def _greet(question: str) -> list[str]:
+def _first_name(member: Member) -> str | None:
+    """The member's first name if it looks like one ("Maria (synthetic)" -> "Maria"), else None."""
+    words = member.display_name.split("(")[0].split()
+    first = words[0] if words else ""
+    return first if re.fullmatch(r"[A-Za-z][A-Za-z'\-]{0,29}", first) else None
+
+
+def _greet(question: str, member: Member) -> list[str]:
     if re.search(r"\bthanks?\b|thank you", question.lower()):
         return ["You're welcome. Is there anything else I can help with?"]
-    return ["Hi, I'm Coverage Coach.", CAN_HELP]
+    name = _first_name(member)
+    return [f"Hi {name}, I'm Coverage Coach." if name else "Hi, I'm Coverage Coach.", CAN_HELP]
 
 
 def _help() -> list[str]:
@@ -378,7 +386,7 @@ def ask_coach(question: str, *, member: Member, status: ProofKitStatus, llm: LLM
     elif tool == "explain_term":
         facts = _explain_term(args.term, wallet_rules)
     elif tool == "greet":
-        facts = _greet(question)
+        facts = _greet(question, member)
     else:
         facts = _help()
 
