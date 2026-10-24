@@ -1,5 +1,6 @@
 """Sign-up / sign-in: salted PBKDF2 hashes, 5 demo accounts linked to the synthetic personas."""
 import json
+from datetime import date
 
 import pytest
 
@@ -32,8 +33,11 @@ def test_wrong_password_unknown_email_and_case(tmp_path):
 def test_sign_up_then_sign_in_without_storing_plaintext(tmp_path):
     path = tmp_path / "accounts.json"
     store = AccountStore(path)
-    created = store.sign_up("Rosa Diaz", "Rosa@Example.com", "a-long-pass-9")
-    assert created.email == "rosa@example.com" and created.member_id is None
+    created = store.sign_up("Rosa Diaz", "Rosa@Example.com", "a-long-pass-9", date(2027, 6, 30))
+    assert created.email == "rosa@example.com" and created.member_id == "SYN-1001"
+    assert created.renewal_date == date(2027, 6, 30)
+    second = store.sign_up("Ann Lee", "ann@example.com", "a-long-pass-9", date(2027, 7, 1))
+    assert second.member_id == "SYN-1002"
     assert AccountStore(path).sign_in("rosa@example.com", "a-long-pass-9") == created   # persisted
     assert "a-long-pass-9" not in path.read_text()
     assert "hash" in json.loads(path.read_text())[0]
@@ -46,13 +50,25 @@ def test_sign_up_then_sign_in_without_storing_plaintext(tmp_path):
 ])
 def test_sign_up_validation(tmp_path, name, email, password):
     with pytest.raises(AuthError):
-        AccountStore(tmp_path / "a.json").sign_up(name, email, password)
+        AccountStore(tmp_path / "a.json").sign_up(name, email, password, date(2027, 6, 30))
 
 
 def test_duplicate_email_rejected_including_demo_accounts(tmp_path):
     store = AccountStore(tmp_path / "a.json")
-    store.sign_up("Ann", "ann@example.com", "a-long-pass-9")
+    store.sign_up("Ann", "ann@example.com", "a-long-pass-9", date(2027, 6, 30))
     with pytest.raises(AuthError):
-        store.sign_up("Ann 2", "ANN@example.com", "a-long-pass-9")
+        store.sign_up("Ann 2", "ANN@example.com", "a-long-pass-9", date(2027, 6, 30))
     with pytest.raises(AuthError):
-        store.sign_up("Fake Maria", DEMO_LOGINS[0]["email"], "a-long-pass-9")
+        store.sign_up("Fake Maria", DEMO_LOGINS[0]["email"], "a-long-pass-9", date(2027, 6, 30))
+
+
+def test_legacy_account_without_member_id_is_upgraded_on_sign_in(tmp_path):
+    path = tmp_path / "accounts.json"
+    from app.auth import hash_password
+    path.write_text(json.dumps([{"name": "Old User", "email": "old@example.org", "member_id": None,
+                                 "hash": hash_password("a-long-pass-9")}]))
+    account = AccountStore(path).sign_in("old@example.org", "a-long-pass-9")
+    assert account.member_id == "SYN-1001" and account.renewal_date is not None
+    saved = json.loads(path.read_text())[0]
+    assert saved["member_id"] == "SYN-1001" and saved["renewal_date"]      # persisted, stable next time
+    assert AccountStore(path).sign_in("old@example.org", "a-long-pass-9").member_id == "SYN-1001"
