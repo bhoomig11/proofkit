@@ -14,7 +14,7 @@ SIGN_OUT_KEYS = ("account", "chat_messages", "chat_member", "section", "document
 def render_navbar(account, sections: list[str] | None) -> dict:
     """Render the top bar. `sections` = links to show (None when no dashboard). Returns display settings."""
     with st.container(key="navbar"):
-        brand, nav, a11y, user = st.columns([2, 7.2, 1.5, 1.5], vertical_alignment="center")
+        brand, nav, a11y, user = st.columns([1.6, 8, 1.4, 1.2], vertical_alignment="center", gap="small")
         brand.markdown(f"<div class='pk-brand'><span aria-hidden='true'>{pip_svg('protected')}</span>{APP_NAME}</div>",
                        unsafe_allow_html=True)
         if sections:
