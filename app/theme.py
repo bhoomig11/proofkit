@@ -1,4 +1,4 @@
-"""Coverage Copilot design tokens, static CSS, and Pip mascot."""
+"""RenewRight design tokens, static CSS, and Pip mascot."""
 from __future__ import annotations
 
 TOKENS: dict[str, dict[str, str]] = {

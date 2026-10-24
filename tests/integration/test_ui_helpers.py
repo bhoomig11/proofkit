@@ -1,4 +1,4 @@
-"""Pure helper tests for the Coverage Copilot UI."""
+"""Pure helper tests for the RenewRight UI."""
 from __future__ import annotations
 
 import html
@@ -111,14 +111,14 @@ def test_packet_contains_verified_summary_and_escapes_dynamic_content() -> None:
                              root / "config/wallet_rules.json")
     malicious_member = view.member.model_copy(update={"display_name": "<script>alert(1)</script>"})
     packet = build_packet_html(malicious_member, view.status, view.findings)
-    assert "ProofKit evidence packet" in packet
+    assert "RenewRight evidence packet" in packet
     assert "At risk" in packet
     assert "February 2027" in packet
     assert "$410.00" in packet
     assert "30" in packet
     assert "<mark>" in packet
     assert "right ankle sprain" in packet.lower()
-    assert "ProofKit organizes evidence. MassHealth makes all eligibility determinations." in packet
+    assert "RenewRight organizes evidence. MassHealth makes all eligibility determinations." in packet
     assert "<script" not in packet.lower()
     assert "&lt;" in packet  # injected source markup/instructions render as text when present
 
