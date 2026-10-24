@@ -20,5 +20,6 @@ jobs:
             p1a/*) make test-p1a ;;
             p1b/*) make test-p1b ;;
             p2/*)  make test-p2 ;;
-            *)     make test ;;
+            final/*) make test-final ;;
+            *)     make check-contracts ;;   # main: contracts must stay green; flip to `make test` at CP3
           esac
