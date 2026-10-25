@@ -2,7 +2,7 @@
 
 **A member-side proof packet so eligible MassHealth members keep their coverage under the 2027 work requirements.**
 
-**Demo Link: https://youtu.be/4My1PtFnqDo**
+[About RenewRight](https://drive.google.com/file/d/1igf1xTW2h6-qQfa0UmlPYb26g1EmDsta/view?usp=drive_link)
 
 Track: **Healthcare & Biotech**. The Python package, contracts and some UI strings still use the working name ProofKit (`proofkit`).
 
