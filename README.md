@@ -2,6 +2,8 @@
 
 **A member-side proof packet so eligible MassHealth members keep their coverage under the 2027 work requirements.**
 
+**Demo Link: https://youtu.be/4My1PtFnqDo**
+
 Track: **Healthcare & Biotech**. The Python package, contracts and some UI strings still use the working name ProofKit (`proofkit`).
 
 ## Why it matters
